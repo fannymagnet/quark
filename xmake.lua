@@ -11,4 +11,4 @@ set_version("1.6.6", {build = "%Y%m%d%H%M"})
 set_languages("c99", "cxx20")
 
 -- include project sources
-includes("src")
+includes("src", "test", "demo")
