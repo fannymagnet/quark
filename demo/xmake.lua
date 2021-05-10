@@ -1,4 +1,6 @@
 target("demo")
     set_kind("binary")
     add_files("*.cpp")
-    add_includedirs("")
+    add_includedirs("$(projectdir)/src")
+    --add_linkdirs("$(projectdir)/build/linux/x86_64/release")
+    add_deps("quark-base")
