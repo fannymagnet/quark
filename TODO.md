@@ -3,6 +3,7 @@
 
 ## TODO
 
-- [ ] linux平台实现liburing网络收发处理
+- [ ] linux平台实现io_uring网络收发处理
 - [ ] windows实现iocp网络收发处理
 - [ ] 时间轮计时器
+- [ ] 接入日志库
