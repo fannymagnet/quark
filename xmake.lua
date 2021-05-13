@@ -14,7 +14,7 @@ set_languages("c99", "cxx20")
 includes("src", "test", "demo")
 
 task("ie")
-    on_run("init_env")
+    on_run("scripts/tasks/init_env")
     set_menu {
         usage = "xmake ie",
         description = "初始化开发环境!",
@@ -22,7 +22,7 @@ task("ie")
     } 
 
 task("dc")
-    on_run("dist_clean")
+    on_run("scripts/tasks/dist_clean")
     set_menu {
         usage = "xmake dc",
         description = "清理中间文件!",
