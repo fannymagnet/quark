@@ -16,6 +16,7 @@ function main(...)
     end
 
     if os.exists(liburing_src_path) then
-        os.rmdir(liburing_src_path)
+        --os.rmdir(liburing_src_path)
+        --os.mkdir(liburing_src_path)
     end
 end
