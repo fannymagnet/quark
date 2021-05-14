@@ -28,3 +28,11 @@ task("dc")
         description = "清理中间文件!",
         options = {}
     }
+
+task("vsc")
+    on_run("scripts/tasks/vsc_cc")
+    set_menu {
+        usage = "xmake vsc",
+        description = "generate compile_commands.json for vscode",
+        options = {}
+    }

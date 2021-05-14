@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "windows_debug",
+            "defines": [
+                "_DEBUG",
+                "_PLATFORM_WINDOWS"
+            ],
+            "compileCommands": "${workspaceFolder}/.vscode/compile_commands.json"
+        },
+        {
+            "name": "windows_release",
+            "defines": [
+                "_RELEASE",
+                "_PLATFORM_WINDOWS"
+            ],
+            "compileCommands": "${workspaceFolder}/.vscode/compile_commands.json"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": "${workspaceFolder}/.vscode/compile_commands.json"
+        }
+    ]
+}
