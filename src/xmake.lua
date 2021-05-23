@@ -1,3 +1,5 @@
 target("quark-base")
     set_kind("static")
+    add_links("uring")
+    add_linkdirs("$(projectdir)/thrd-libs/liburing/lib)")
     add_files("quark.cpp")

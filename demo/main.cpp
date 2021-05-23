@@ -2,5 +2,5 @@
 #include <iostream>
 
 int main() {
-    std::cout << Add(1,2) << std::endl;
+    check_io_uring_function();
 }
