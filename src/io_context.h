@@ -14,6 +14,12 @@ public:
 
     bool init();
 
+    void runOnce();
+
+
+private:
+    void add_channel_read(channel* chan);
+
 private:
     /* data */
     struct io_uring m_ring; 
