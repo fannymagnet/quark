@@ -13,4 +13,6 @@ function main(...)
     os.exec("./configure --prefix="..install_path)
     os.exec("make")
     os.exec("make install")
+
+    os.exec("xmake require -f -y")
 end

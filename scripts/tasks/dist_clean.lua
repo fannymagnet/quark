@@ -11,12 +11,11 @@ function main(...)
     liburing_src_path = path .. "/thrd-libs/liburing"
     install_path = path .. "/deps/liburing"
 
-    if os.exists(install_path) then
-        os.rmdir(install_path)
-    end
+    os.tryrm(install_path)
 
     if os.exists(liburing_src_path) then
         --os.rmdir(liburing_src_path)
         --os.mkdir(liburing_src_path)
     end
+    os.exec("git submodule deinit --force --all") 
 end
