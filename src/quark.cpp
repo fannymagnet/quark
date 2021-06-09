@@ -5,6 +5,9 @@
 #include <sys/utsname.h>
 
 #include "liburing.h"
+#include "easylogging++.h"
+
+INITIALIZE_EASYLOGGINGPP
 
 int Add(int a, int b) {
     return a + b;
@@ -54,7 +57,7 @@ static const char *op_strs[] = {
 int check_io_uring_function() {
     struct utsname u;
     uname(&u);
-    printf("You are running kernel version: %s\n", u.release);
+    LOG(INFO) << "You are running kernel version: " << u.release;
     struct io_uring_probe *probe = io_uring_get_probe();
     printf("Report of your kernel's list of supported io_uring operations:\n");
     for (char i = 0; i < IORING_OP_LAST; i++ ) {

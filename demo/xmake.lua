@@ -1,5 +1,7 @@
 target("demo")
     set_kind("binary")
     add_files("*.cpp")
+	add_includedirs("$(projectdir)/deps/easyloggingpp")
     add_includedirs("$(projectdir)/src")
     add_deps("quark-base")
+    add_files("$(projectdir)/deps/easyloggingpp/*.cc")

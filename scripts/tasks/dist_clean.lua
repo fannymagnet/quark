@@ -13,9 +13,8 @@ function main(...)
 
     os.tryrm(install_path)
 
-    if os.exists(liburing_src_path) then
-        --os.rmdir(liburing_src_path)
-        --os.mkdir(liburing_src_path)
-    end
+    log_install_path = path .. "/deps/easyloggingpp"
+    os.tryrm(log_install_path)
+
     os.exec("git submodule deinit --force --all") 
 end

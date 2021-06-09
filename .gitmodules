@@ -1,3 +1,6 @@
 [submodule "thrd-libs/liburing"]
 	path = thrd-libs/liburing
 	url = https://github.com/axboe/liburing.git
+[submodule "thrd-libs/easyloggingpp"]
+	path = thrd-libs/easyloggingpp
+	url = https://github.com/amrayn/easyloggingpp.git
