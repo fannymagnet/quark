@@ -1,7 +1,15 @@
 target("demo")
     set_kind("binary")
-    add_files("*.cpp")
+    add_files("main.cpp")
 	add_includedirs("$(projectdir)/deps/easyloggingpp")
     add_includedirs("$(projectdir)/src")
     add_deps("quark-base")
-    add_files("$(projectdir)/deps/easyloggingpp/*.cc")
+
+
+target("client")
+    set_kind("binary")
+    add_files("client.cpp")
+
+target("server")
+    set_kind("binary")
+    add_files("server.cpp")
