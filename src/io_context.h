@@ -14,11 +14,13 @@ public:
 
     bool init();
 
+    void run();
     void runOnce();
 
+    void add_accept(int sock);
 
 private:
-    void add_channel_accpet(channel* chan, sockaddr *client_addr, socklen_t* client_len );
+    void add_channel_accept(channel* chan, sockaddr *client_addr, socklen_t* client_len );
     void add_channel_read(channel* chan);
     void add_channel_write(channel* chan);
 private:

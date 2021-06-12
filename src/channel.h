@@ -1,4 +1,6 @@
 #pragma once
+#include <iostream>
+
 #include <array>
 
 enum EventType {
@@ -14,7 +16,7 @@ struct EventInfo {
     uint16_t size;
 };
 
-const int MaxBufferSize = 64000;
+const int MaxBufferSize = 64;
 
 class channel
 {
@@ -46,21 +48,3 @@ private:
 
     std::array<uint8_t, MaxBufferSize> m_write_buff;
 };
-
-channel::channel(int fd)
-{
-    m_rawfd = fd;
-    m_state.size = 0;
-    m_state.type = EventIdle;
-    m_state.fd = m_rawfd;
-}
-
-channel::~channel()
-{
-    /*
-    if (nullptr != m_state) {
-        delete m_state;
-        m_state = nullptr;
-    }
-    */
-}

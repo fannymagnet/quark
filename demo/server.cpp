@@ -6,9 +6,29 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include "quark.h"
+
 using namespace std;
 
 int main(){
+
+    io_context* ctx = new io_context();
+    if (!ctx->init()){
+        cout << "init io context failed!" << endl;
+        exit(1);
+    }
+
+    int serv_socket = setup_listening_socket(ctx, 8888);
+    try 
+    {
+        ctx->run();
+    } 
+    catch(exception e) 
+    {
+        cout << "error happened : " << e.what() << endl;
+        cerr << "errno: " << errno << endl;
+    }
+/*
     //创建套接字
     int serv_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     //将套接字和IP、端口绑定
@@ -34,5 +54,6 @@ int main(){
         close(clnt_sock);
     }
     close(serv_sock);
+    */
     return 0;
 }

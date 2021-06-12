@@ -20,15 +20,25 @@ int main() {
     memset(&serv_addr, 0, sizeof(serv_addr));  //每个字节都用0填充
     serv_addr.sin_family = AF_INET;  //使用IPv4地址
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");  //具体的IP地址
-    serv_addr.sin_port = htons(1234);  //端口
+    serv_addr.sin_port = htons(8888);  //端口
 
     connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 
-    //读取服务器传回的数据
-    char buffer[40];
-    read(sock, buffer, sizeof(buffer)-1);
-   
-    cout << "Message form server: " << buffer << endl;
+    while (true)
+    {
+        string msg = "";
+        cin >> msg;
+        if (msg == "exit") {
+            break;
+        }
+        write(sock, msg.data(), msg.size());
+
+        //读取服务器传回的数据
+        char buffer[40];
+        memset(buffer, 0, sizeof(buffer));
+        int nbytes = read(sock, buffer, sizeof(buffer)-1);
+        cout << "Message form server: " << buffer << " bytes: " << nbytes  << endl;
+    }
    
     //关闭套接字
     close(sock);

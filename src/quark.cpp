@@ -76,7 +76,7 @@ int check_io_uring_function() {
     return 0;
 }
 
-int setup_listening_socket(int port) {
+int setup_listening_socket(io_context* ctx, int port) {
     int sock;
     struct sockaddr_in srv_addr;
 
@@ -106,6 +106,13 @@ int setup_listening_socket(int port) {
 
     if (listen(sock, 10) < 0)
         LOG(ERROR) << "listen()";
+
+    if (nullptr == ctx) {
+        LOG(ERROR) << "io context is nullptr";
+        exit(1);
+    }
+
+    ctx->add_accept(sock);
 
     return (sock);
 }

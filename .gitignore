@@ -38,4 +38,9 @@ build/
 # vscode
 .vscode/
 
+# deps
 deps/liburing
+deps/easyloggingpp
+
+# log file
+*.log
