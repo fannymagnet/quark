@@ -116,3 +116,26 @@ int setup_listening_socket(io_context* ctx, int port) {
 
     return (sock);
 }
+
+int setup_connect_socket(io_context* ctx, char* addr, int port) {
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (-1 == sock) {
+        LOG(ERROR) << "create socket error!" << sock;
+        exit(1);
+    }
+
+    //向服务器（特定的IP和端口）发起请求
+    struct sockaddr_in serv_addr;
+    memset(&serv_addr, 0, sizeof(serv_addr));  //每个字节都用0填充
+    serv_addr.sin_family = AF_INET;  //使用IPv4地址
+    serv_addr.sin_addr.s_addr = inet_addr(addr);  //具体的IP地址
+    serv_addr.sin_port = htons(port);  //端口
+
+    int r = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (r < 0) {
+        LOG(ERROR) << "socket connect error: " << r;
+        exit(1);
+    }
+
+    return sock;
+}

@@ -2,9 +2,12 @@
 #include "channel.h"
 
 #include <map>
+#include <functional>
 #include <unordered_map>
+
 #include "liburing.h"
 #include "noncopyable.h"
+#include "safe_queue.h"
 
 class io_context : public NonCopyable
 {
@@ -27,4 +30,7 @@ private:
     /* data */
     struct io_uring m_ring; 
     std::unordered_map<uint64_t, channel*> m_channels;
+    std::unordered_map<int, channel*> m_SocketToChannels;
+
+    SafeQueue<std::function<void()>> m_events;
 };

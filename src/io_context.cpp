@@ -53,6 +53,7 @@ void io_context::runOnce()
                 if (sock_conn_fd >= 0) {
                     channel* chan = new channel(sock_conn_fd);
                     m_channels.insert(std::make_pair((uint64_t)chan, chan));
+                    m_SocketToChannels.insert(std::make_pair(sock_conn_fd, chan));
                     add_channel_read(chan);
                     LOG(INFO) << "ACCEPT => " << req->GetSocket() << " Read new connection: " << sock_conn_fd;
                 }
@@ -99,6 +100,8 @@ void io_context::run() {
 
 void io_context::add_accept(int sock) {
     channel* chan = new channel(sock);
+    m_channels.insert(std::make_pair((uint64_t)chan, chan));
+    m_SocketToChannels.insert(std::make_pair(sock, chan));
     add_channel_accept(chan, nullptr, nullptr);
 }
 
