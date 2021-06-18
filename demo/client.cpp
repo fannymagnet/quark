@@ -1,6 +1,10 @@
 #include <iostream>
-#include <string.h>
+#include <thread>
+#include <vector>
+#include <memory>
+#include <chrono>
 
+#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/types.h>          /* See NOTES */
@@ -8,7 +12,7 @@
 
 using namespace std;
 
-int main() {
+int TcpConnect(string ipv4, int port) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == sock) {
         cerr << sock << endl;
@@ -19,29 +23,74 @@ int main() {
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));  //每个字节都用0填充
     serv_addr.sin_family = AF_INET;  //使用IPv4地址
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");  //具体的IP地址
-    serv_addr.sin_port = htons(8888);  //端口
+    serv_addr.sin_addr.s_addr = inet_addr(ipv4.c_str());  //具体的IP地址
+    serv_addr.sin_port = htons(port);  //端口
 
     connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 
-    while (true)
-    {
-        string msg = "";
-        cin >> msg;
-        if (msg == "exit") {
-            break;
-        }
-        write(sock, msg.data(), msg.size());
+    return sock;
+}
 
-        //读取服务器传回的数据
-        char buffer[40];
-        memset(buffer, 0, sizeof(buffer));
-        int nbytes = read(sock, buffer, sizeof(buffer)-1);
-        cout << "Message form server: " << buffer << " bytes: " << nbytes  << endl;
+struct Sum {
+    int64_t in = 0;
+    int64_t out = 0;
+};
+
+int main() {
+    int thread_count = 4;
+    int buf_size = 128;
+    vector<Sum> results(thread_count);
+
+    vector<thread> ts;
+    for (int i = 0 ; i < thread_count; ++i) {
+
+        thread t([i, &results, buf_size]() {
+            Sum s;
+            int sock = TcpConnect("127.0.0.1", 8888); 
+            std::chrono::milliseconds ms {10000};
+
+            auto begin = chrono::steady_clock::now();
+
+            while (true)
+            {
+                auto end = chrono::steady_clock::now();
+                if ((end - begin) > ms) {
+                    std::cout <<  "ms duration has " << ms.count() << " ticks\n" << (end - begin).count() << "ticks" << endl;;
+                    break;
+                }
+                char send_buffer[buf_size];
+                memset(send_buffer, 1, sizeof(send_buffer));
+                write(sock, send_buffer, sizeof(send_buffer)-1);
+                ++s.in;
+
+                //读取服务器传回的数据
+                char buffer[buf_size];
+                memset(buffer, 0, sizeof(buffer));
+                int nbytes = read(sock, buffer, sizeof(buffer)-1);
+                //cout << "Message form server: " << buffer << " bytes: " << nbytes  << endl;
+                ++s.out;
+            }
+
+            results.emplace_back(s);
+            //关闭套接字
+            close(sock);
+        });
+        ts.emplace_back(std::move(t));
     }
-   
-    //关闭套接字
-    close(sock);
+
+    for(int i = 0; i < ts.size(); i++) {
+        ts[i].join();
+    }
+
+    Sum sum_counter;
+    for(int i = 0; i < results.size(); ++i)
+    {
+        sum_counter.in += results[i].in;
+        sum_counter.out += results[i].out;
+    }
+
+    cout << "in:" << sum_counter.in / 10 << endl;
+    cout << "out:" << sum_counter.out / 10 << endl;
 
     return 0;
 }

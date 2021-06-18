@@ -115,7 +115,7 @@ void io_context::add_channel_read(channel* chan)
 {
     struct io_uring_sqe *sqe = io_uring_get_sqe(&m_ring);
     auto& buf = chan->GetBuffer();
-    io_uring_prep_read(sqe, chan->GetSocket(), buf.data(), 64, 0);
+    io_uring_prep_read(sqe, chan->GetSocket(), buf.data(), chan->GetDataCount(), 0);
     chan->SetEvent(EventRead);
     io_uring_sqe_set_data(sqe, chan);
     io_uring_submit(&m_ring);
