@@ -1,7 +1,9 @@
 #pragma once
 #include <iostream>
-
 #include <array>
+#include <sys/uio.h>
+
+#include "ringbuffer.h"
 
 enum EventType {
     EventIdle = 0,
@@ -28,15 +30,13 @@ public:
     EventType CurrentEvent() {return m_state.type;}
     void SetEvent(EventType t) { m_state.type = t;}
 
-    std::array<uint8_t, MaxBufferSize>& GetBuffer() {
+    RingBuffer& GetBuffer() {
         return m_buff;
     }
 
-    void SetDataCount(uint16_t count) {
-        m_dataCount = count;
-    }
+    struct iovec* get_write_vecs(uint32_t& nv);
+    struct iovec* get_read_vecs( uint32_t& nv);
 
-    uint16_t GetDataCount() { return m_dataCount; }
 private:
     /* data */
     int m_rawfd;
@@ -44,7 +44,9 @@ private:
     EventInfo m_state;
     //todo: add two ring buffer for write and read
     uint16_t m_dataCount = 0;
-    std::array<uint8_t, MaxBufferSize> m_buff;
+    RingBuffer m_buff;
 
+    struct iovec read_vecs[2];
+    struct iovec write_vecs[2];
     std::array<uint8_t, MaxBufferSize> m_write_buff;
 };

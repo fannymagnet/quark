@@ -37,9 +37,13 @@ struct Sum {
 };
 
 int main() {
-    int thread_count = 4;
+    int thread_count = 1;
     int buf_size = 128;
-    vector<Sum> results(thread_count);
+    vector<Sum> results;
+    for (int i = 0; i < thread_count; ++i)
+    {
+        results.push_back(Sum());
+    }
 
     vector<thread> ts;
     for (int i = 0 ; i < thread_count; ++i) {
@@ -50,28 +54,34 @@ int main() {
             std::chrono::milliseconds ms {10000};
 
             auto begin = chrono::steady_clock::now();
+            cout << " socket: " << sock << " begin send!" << endl;
 
             while (true)
             {
                 auto end = chrono::steady_clock::now();
                 if ((end - begin) > ms) {
-                    std::cout <<  "ms duration has " << ms.count() << " ticks\n" << (end - begin).count() << "ticks" << endl;;
+                    cout << " socket: " << sock << " finiesh send!" << endl;
                     break;
                 }
                 char send_buffer[buf_size];
                 memset(send_buffer, 1, sizeof(send_buffer));
                 write(sock, send_buffer, sizeof(send_buffer)-1);
                 ++s.in;
+                cout << sock << " write finished, begin read --" << endl;
 
                 //读取服务器传回的数据
                 char buffer[buf_size];
                 memset(buffer, 0, sizeof(buffer));
                 int nbytes = read(sock, buffer, sizeof(buffer)-1);
-                //cout << "Message form server: " << buffer << " bytes: " << nbytes  << endl;
+                if (nbytes == 0) {
+                    cout << "Message form server: " << sock << " bytes: " << nbytes << " disconnected" << endl;
+                    break;
+                }
                 ++s.out;
             }
 
-            results.emplace_back(s);
+            results[i] = s;
+            cout << sock << " begin setting result: " << s.in << " : " << s.out << endl;
             //关闭套接字
             close(sock);
         });

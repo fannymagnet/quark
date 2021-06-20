@@ -14,6 +14,7 @@ target("client")
     add_includedirs("$(projectdir)/src")
 
 target("server")
+    set_symbols("debug")
     set_kind("binary")
     add_files("server.cpp")
     add_deps("quark-base")

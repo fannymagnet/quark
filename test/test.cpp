@@ -2,6 +2,7 @@
 
 #include <catch2/catch.hpp>
 #include "quark.h"
+#include "ringbuffer.h"
 
 TEST_CASE("1 is equal to 1 (success)", "[tag1]")
 {

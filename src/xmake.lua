@@ -1,4 +1,5 @@
 target("quark-base")
+    set_symbols("debug")
     set_kind("static")
 	add_includedirs("$(projectdir)/deps/easyloggingpp")
     add_links("uring")
