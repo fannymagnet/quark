@@ -2,6 +2,7 @@
 
 #include "singleton.h"
 #include "io_context.h"
+#include "service.h"
 
 /*
 #ifdef __cplusplus
