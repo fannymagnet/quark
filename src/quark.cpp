@@ -13,7 +13,20 @@
 
 INITIALIZE_EASYLOGGINGPP
 
+CoTask<int> CounterTimes(int a, int b, int c) {
+    int sum = 0;
+    for (int i = 0; i < c; ++i) {
+        sum += a;
+        sum += b;
+        printf("current %d sum: %d\n", i, sum);
+        co_await CoTaskAwaitable<TaskPromise<int>> {};
+        //co_await std::suspend_always{};
+    }
+    co_return sum;
+}
 int Add(int a, int b) {
+    auto co = CounterTimes(a, b, 5);
+    std::cout << " coroutine return value = " << co.GetValue() << std::endl;
     return a + b;
 }
 
