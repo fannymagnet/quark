@@ -1,7 +1,7 @@
 target("quark-base")
     set_symbols("debug")
     set_kind("static")
-	add_includedirs("$(projectdir)/deps/easyloggingpp")
+	--add_includedirs("$(projectdir)/deps/easyloggingpp")
     add_links("uring")
     add_linkdirs("$(projectdir)/deps/liburing/lib")
     add_files("*.cpp")

@@ -12,13 +12,13 @@ using namespace std;
 
 int main(){
 
-    io_context* ctx = new io_context();
+    quark::io_context* ctx = new quark::io_context();
     if (!ctx->init()){
         cout << "init io context failed!" << endl;
         exit(1);
     }
 
-    int serv_socket = setup_listening_socket(ctx, 8888);
+    int serv_socket = quark::setup_listening_socket(ctx, 8888);
     try 
     {
         ctx->run();

@@ -16,5 +16,5 @@ TEST_CASE("1 is not equal to 0 (fail)", "[tag1]")
 
 TEST_CASE("1 + 1 = 2(success)", "[tag2]")
 {
-    REQUIRE(Add(1, 1) == 2);
+    REQUIRE(quark::Add(1, 1) == 2);
 }

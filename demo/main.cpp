@@ -11,6 +11,6 @@ using namespace std;
 
 int main()
 {
-    check_io_uring_function();
-    Add(5,8);
+    quark::check_io_uring_function();
+    quark::Add(5,8);
 }
