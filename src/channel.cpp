@@ -5,7 +5,7 @@
 
 namespace quark
 {
-    channel::channel(int fd)
+    Channel::Channel(int fd)
     {
         m_rawfd = fd;
         m_state.size = 0;
@@ -13,7 +13,7 @@ namespace quark
         m_state.fd = m_rawfd;
     }
 
-    channel::~channel()
+    Channel::~Channel()
     {
         /*
     if (nullptr != m_state) {
@@ -23,7 +23,7 @@ namespace quark
     */
     }
 
-    struct iovec *channel::get_write_vecs(uint32_t &nv)
+    struct iovec *Channel::get_write_vecs(uint32_t &nv)
     {
         unsigned int nr_vecs = 2;
         for (size_t i = 0; i < 2; ++i)
@@ -37,7 +37,7 @@ namespace quark
         return write_vecs;
     }
 
-    struct iovec *channel::get_read_vecs(uint32_t &nv)
+    struct iovec *Channel::get_read_vecs(uint32_t &nv)
     {
         unsigned int nr_vecs = 2;
         for (size_t i = 0; i < 2; ++i)

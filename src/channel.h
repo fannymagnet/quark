@@ -26,11 +26,11 @@ namespace quark
 
     const int MaxBufferSize = 64;
 
-    class channel
+    class Channel
     {
     public:
-        channel(int fd);
-        ~channel();
+        Channel(int fd);
+        ~Channel();
 
         int GetSocket() { return m_rawfd; }
         EventType CurrentEvent() { return m_state.type; }

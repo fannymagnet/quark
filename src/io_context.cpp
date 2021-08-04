@@ -51,7 +51,7 @@ namespace quark
         io_uring_for_each_cqe(&m_ring, head, cqe)
         {
             ++count;
-            channel *req = (channel *)io_uring_cqe_get_data(cqe);
+            Channel *req = (Channel *)io_uring_cqe_get_data(cqe);
             ;
             switch (req->CurrentEvent())
             {
@@ -63,7 +63,7 @@ namespace quark
                 // only read when there is no error, >= 0
                 if (sock_conn_fd >= 0)
                 {
-                    channel *chan = new channel(sock_conn_fd);
+                    Channel *chan = new Channel(sock_conn_fd);
                     m_channels.insert(std::make_pair((uint64_t)chan, chan));
                     m_SocketToChannels.insert(std::make_pair(sock_conn_fd, chan));
                     add_channel_read(chan);
@@ -127,13 +127,13 @@ namespace quark
 
     void io_context::add_accept(int sock)
     {
-        channel *chan = new channel(sock);
+        Channel *chan = new Channel(sock);
         m_channels.insert(std::make_pair((uint64_t)chan, chan));
         m_SocketToChannels.insert(std::make_pair(sock, chan));
         add_channel_accept(chan, nullptr, nullptr);
     }
 
-    void io_context::add_channel_accept(channel *chan, sockaddr *client_addr, socklen_t *client_len)
+    void io_context::add_channel_accept(Channel *chan, sockaddr *client_addr, socklen_t *client_len)
     {
         struct io_uring_sqe *sqe = io_uring_get_sqe(&m_ring);
         //LOG(INFO) << "channel for socket " << chan->GetSocket() << " add accept";
@@ -143,7 +143,7 @@ namespace quark
         io_uring_submit(&m_ring);
     }
 
-    void io_context::add_channel_read(channel *chan)
+    void io_context::add_channel_read(Channel *chan)
     {
         struct io_uring_sqe *sqe = io_uring_get_sqe(&m_ring);
         uint32_t nr_vecs = 2;
@@ -158,7 +158,7 @@ namespace quark
         io_uring_submit(&m_ring);
     }
 
-    void io_context::add_channel_write(channel *chan)
+    void io_context::add_channel_write(Channel *chan)
     {
         struct io_uring_sqe *sqe = io_uring_get_sqe(&m_ring);
         chan->SetEvent(EventWrite);
