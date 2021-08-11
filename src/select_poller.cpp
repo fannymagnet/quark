@@ -120,7 +120,6 @@ namespace quark
     }
 
     void SelectPoller::DirectAddChannle(Channel* ch) {
-        auto it = std::find(channels_.begin(), channels_.end(), )
     }
     void SelectPoller::DirectRemoveChannle(Channel* ch) {
 
