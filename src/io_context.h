@@ -2,12 +2,23 @@
 #include "channel.h"
 
 #include <map>
+#include <list>
 #include <functional>
 #include <unordered_map>
 
-#include "liburing.h"
+#ifdef WIN32
+#include<ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#endif
+
+//#include "liburing.h"
 #include "noncopyable.h"
 #include "safe_queue.h"
+#include "poller.h"
+#include "select_poller.h"
 
 namespace quark
 {
@@ -31,7 +42,8 @@ namespace quark
 
     private:
         /* data */
-        struct io_uring m_ring;
+        //struct io_uring m_ring;
+        SelectPoller poller;
         std::unordered_map<uint64_t, Channel *> m_channels;
         std::unordered_map<int, Channel *> m_SocketToChannels;
 
