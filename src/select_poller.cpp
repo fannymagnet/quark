@@ -58,11 +58,12 @@ namespace quark
 
         retval = select(max_fd + 1, &rfds, &wfds, 0, &tv);
 
-        if (retval == -1)
+        if (retval < 0)
             perror("select()");
-        else if (retval)
+        else if (retval > 0) {
             printf("Data is available now.\n");
-        /* FD_ISSET(0, &rfds) will be true. */
+            /* FD_ISSET(0, &rfds) will be true. */
+        }
         else
             printf("No data within five seconds.\n");
     }
