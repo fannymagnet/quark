@@ -46,7 +46,6 @@ namespace quark
             }
             else
             {
-
                 if (ch->WaitingSendBytes() > 0)
                 {
                     // send data
@@ -66,9 +65,14 @@ namespace quark
                     {
                         std::cout << "ERROR: socket: " << ch->GetSocket() << " recv " << bytes << " bytes!  errno: " << errno << std::endl;
                         continue;
-                    }
+                    } else if (bytes == 0) {
+                        poller.RemoveChannel(ch);
+                        std::cout << "socket: " << ch->GetSocket() << " disconnected!" << std::endl;
+                        ::close(ch->GetSocket());
+                    } else {
                     std::cout << "socket: " << ch->GetSocket() << " recv " << bytes << " bytes" << std::endl;
                     ch->GetReadBuffer().add(bytes);
+                    }
                 }
                 // echo
                 if (ch->CanRead())

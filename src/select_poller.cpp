@@ -68,7 +68,7 @@ namespace quark
 
         struct timeval tv;
         tv.tv_sec = ms / 1000;
-        tv.tv_usec = ms & 1000 * 1000;
+        tv.tv_usec = ms % 1000 * 1000;
 
         int retval = select(max_fd + 1, &rfds, &wfds, 0, &tv);
 
