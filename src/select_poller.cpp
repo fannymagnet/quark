@@ -27,10 +27,10 @@ namespace quark
         {
             switch (ev.t)
             {
-            case PollerEventType::Add:
+            case PollerEvent::PollerEventType::Add:
                 DirectAddChannle(ev.ch);
                 break;
-            case PollerEventType::Remove:
+            case PollerEvent::PollerEventType::Remove:
                 DirectRemoveChannle(ev.ch);
                 break;
             default:
@@ -55,6 +55,9 @@ namespace quark
         {
             int fd = channels_[i]->GetSocket();
             auto ev = channels_[i]->CurrentEvent();
+            if (ev & EventAccept)
+                FD_SET(fd, &rfds);
+
             if (ev & EventRead)
                 FD_SET(fd, &rfds);
 
@@ -86,7 +89,6 @@ namespace quark
                 if (FD_ISSET(ch->GetSocket(), &rfds)||FD_ISSET(ch->GetSocket(), &wfds))
                 {
                     actChannels.push_back(ch);
-                    hasEvent = false;
                 }
             }
         }
@@ -99,12 +101,12 @@ namespace quark
 
     bool SelectPoller::AddChannel(Channel *channel)
     {
-        return events_.push(PollerEvent{PollerEventType::Add, channel});
+        return events_.push(PollerEvent{ PollerEvent::PollerEventType::Add, channel});
     }
 
     bool SelectPoller::RemoveChannel(Channel *channel)
     {
-        return events_.push(PollerEvent{PollerEventType::Remove, channel});
+        return events_.push(PollerEvent{ PollerEvent::PollerEventType::Remove, channel});
     }
 
     void SelectPoller::DirectAddChannle(Channel *ch)

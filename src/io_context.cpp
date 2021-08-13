@@ -16,30 +16,11 @@ namespace quark
 
     bool io_context::init()
     {
-        // initialize io_uring
-        //struct io_uring_params params;
-        //memset(&params, 0, sizeof(params));
-        //params.sq_thread_idle = 200;
-        //int result = io_uring_queue_init_params(1024, &m_ring, &params);
-        //if (result < 0)
-        //{
-        //    ////LOG(ERROR) << "init uring queue failed! error: " << -result;
-        //    return false;
-        //}
-
-        //// check if IORING_FEAT_FAST_POLL is supported
-        //if (!(params.features & IORING_FEAT_FAST_POLL))
-        //{
-        //    //LOG(ERROR) << "IORING_FEAT_FAST_POLL not available in the kernel, quiting...\n";
-        //    return false;
-        //}
-
         return true;
     }
 
     io_context::~io_context()
     {
-        //io_uring_queue_exit(&m_ring);
     }
 
     void io_context::runOnce()
@@ -47,10 +28,20 @@ namespace quark
         uint8_t buf[1024] = {};
         std::list<Channel *> actChannels;
         poller.Update(1, actChannels);
+        struct sockaddr addr;
+        socklen_t addr_len; 
         for (auto ch : actChannels)
         {
             if (nullptr == ch)
                 continue;
+            if (ch->CurrentEvent() & EventAccept) {
+                int ret = accept(ch->GetSocket(), &addr, &addr_len);        
+                if (ret > 0) {
+                    Channel* chan = new Channel(ret);
+                    poller.AddChannel(chan);
+                }
+            }
+
             if (ch->WaitingSendBytes() > 0) {
                 // send data
                 uint32_t nv = 0;
@@ -86,16 +77,18 @@ namespace quark
         while (true)
         {
             runOnce();
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
 
     void io_context::add_accept(int sock)
     {
         Channel *chan = new Channel(sock);
+        chan->SetEvent(EventAccept);
         m_channels.insert(std::make_pair((uint64_t)chan, chan));
         m_SocketToChannels.insert(std::make_pair(sock, chan));
-        add_channel_accept(chan, nullptr, nullptr);
+        poller.AddChannel(chan);
+        //add_channel_accept(chan, nullptr, nullptr);
     }
 
     void io_context::add_channel_accept(Channel *chan, sockaddr *client_addr, socklen_t *client_len)

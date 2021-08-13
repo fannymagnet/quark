@@ -30,6 +30,7 @@ namespace quark
         }
         co_return sum;
     }
+
     int Add(int a, int b)
     {
         auto co = CounterTimes(a, b, 5);
