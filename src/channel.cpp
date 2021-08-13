@@ -36,10 +36,11 @@ namespace quark
         }
         if (hasAccpet)
         {
-            m_state |= EventAccept;
+            m_state.type |= EventAccept;
         }
         return m_state.type;
     }
+
     struct iovec *Channel::get_write_vecs(uint32_t &nv)
     {
         unsigned int nr_vecs = 2;
@@ -49,7 +50,7 @@ namespace quark
             write_vecs[i].iov_len = 0;
         }
 
-        write_buff_.get_writeable_buffer(write_vecs, nr_vecs);
+        write_buff_.get_readable_buffer(write_vecs, nr_vecs);
         nv = nr_vecs;
         return write_vecs;
     }
@@ -63,7 +64,7 @@ namespace quark
             read_vecs[i].iov_len = 0;
         }
 
-        m_buff.get_readable_buffer(read_vecs, nr_vecs);
+        read_buff_.get_writeable_buffer(read_vecs, nr_vecs);
         nv = nr_vecs;
         return read_vecs;
     }

@@ -44,91 +44,41 @@ namespace quark
 
     void io_context::runOnce()
     {
+        uint8_t buf[1024] = {};
         std::list<Channel *> actChannels;
         poller.Update(1, actChannels);
         for (auto ch : actChannels)
         {
             if (nullptr == ch)
                 continue;
-            switch (ch->CurrentEvent())
-            {
-            case EventAccept:
-            case EventRead:
-            case EventWrite:
-            default:
-            break;
+            if (ch->WaitingSendBytes() > 0) {
+                // send data
+                uint32_t nv = 0;
+                iovec* vec = ch->get_write_vecs(nv);
+                auto bytes = writev(ch->GetSocket(), vec, nv);
+                ch->GetWriteBuffer().erase(bytes);
+            }
+
+            if (ch->InBfferCapcity() > 0) {
+                // decode msg
+                uint32_t nv = 0;
+                iovec* vec = ch->get_read_vecs(nv);
+                auto bytes = readv(ch->GetSocket(), vec, nv);
+                ch->GetReadBuffer().add(bytes);
+            }
+            // echo 
+            if (ch->CanRead()) {
+                while (ch->WaitingSendBytes() > 0) {
+                    // send data
+                    uint32_t nv = 0;
+                    iovec* vec = ch->get_write_vecs(nv);
+                    auto bytes = writev(ch->GetSocket(), vec, nv);
+                    ch->GetWriteBuffer().erase(bytes);
+                }
+                auto count = ch->GetReadBuffer().get(buf, 1024);
+                ch->GetWriteBuffer().put(buf, count);
             }
         }
-        //        struct io_uring_cqe *cqe;
-        //        unsigned head;
-        //        unsigned count = 0;
-        //        // go through all CQEs
-        //        io_uring_for_each_cqe(&m_ring, head, cqe)
-        //        {
-        //            ++count;
-        //            Channel *req = (Channel *)io_uring_cqe_get_data(cqe);
-        //            ;
-        //            switch (req->CurrentEvent())
-        //            {
-        //            case EventAccept:
-        //            {
-        //                struct sockaddr_in client_addr;
-        //                socklen_t client_len = sizeof(client_addr);
-        //                int sock_conn_fd = cqe->res;
-        //                // only read when there is no error, >= 0
-        //                if (sock_conn_fd >= 0)
-        //                {
-        //                    Channel *chan = new Channel(sock_conn_fd);
-        //                    m_channels.insert(std::make_pair((uint64_t)chan, chan));
-        //                    m_SocketToChannels.insert(std::make_pair(sock_conn_fd, chan));
-        //                    add_channel_read(chan);
-        //                    //LOG(INFO) << "ACCEPT => " << req->GetSocket() << " Read new connection: " << sock_conn_fd;
-        //                }
-        //                add_channel_accept(req, (sockaddr *)&client_addr, &client_len);
-        //                //LOG(INFO) << "ACCEPT => Accpet again";
-        //                break;
-        //            }
-        //            case EventRead:
-        //            {
-        //                int bytes_read = cqe->res;
-        //                if (cqe->res <= 0)
-        //                {
-        //                    // connection closed or error
-        //                    shutdown(req->GetSocket(), SHUT_RDWR);
-        //                    //LOG(INFO) << "socket disconnect: " << req->GetSocket() << " error: " << errno << " res: " << cqe->res;
-        //                    m_channels.erase((uint64_t)req);
-        //                    m_SocketToChannels.erase(req->GetSocket());
-        //                    delete req;
-        //                }
-        //                else
-        //                {
-        //                    // todo: bytes have been read into bufs, now add write to socket sqe
-        //                    //LOG(INFO) << "socket: " << req->GetSocket() << " read " << bytes_read << " bytes";
-        //                    req->GetBuffer().add(bytes_read);
-        //                    add_channel_write(req);
-        //                }
-        //                break;
-        //            }
-        //            case EventWrite:
-        //            {
-        //                if (cqe->res <= 0)
-        //                {
-        //                    //LOG(INFO) << "socket write to client error " << cqe->res;
-        //                }
-        //                else
-        //                {
-        //                    //LOG(INFO) << "socket write to client " << req->GetSocket() << " complete " << cqe->res;
-        //                }
-        //                req->GetBuffer().erase(cqe->res);
-        //                add_channel_read(req);
-        //                break;
-        //            }
-        //            default:
-        //                break;
-        //            }
-        //        }
-        //        /* Mark this request as processed */
-        //        io_uring_cq_advance(&m_ring, count);
     }
 
     void io_context::run()
