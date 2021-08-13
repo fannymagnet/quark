@@ -55,13 +55,11 @@ namespace quark
         {
             int fd = channels_[i]->GetSocket();
             auto ev = channels_[i]->CurrentEvent();
-            if (ev & EventAccept)
+            bool isListenner = ev & EventAccept;
+            if (ev & EventRead || isListenner)
                 FD_SET(fd, &rfds);
 
-            if (ev & EventRead)
-                FD_SET(fd, &rfds);
-
-            if (ev & EventWrite)
+            if (ev & EventWrite && !isListenner)
                 FD_SET(fd, &wfds);
 
             if (fd > max_fd)
@@ -74,27 +72,28 @@ namespace quark
 
         int retval = select(max_fd + 1, &rfds, &wfds, 0, &tv);
 
+        std::cout << "select result: " << retval << std::endl;
         if (retval < 0)
         {
-            //perror("select()");
             return;
         }
-        else if (retval)
+        else if (retval > 0)
         {
             actChannels.clear();
-            //printf("Data is available now.\n");
             for (size_t i = 0; i < channels_.size(); i++)
             {
                 auto ch = channels_[i];
-                if (FD_ISSET(ch->GetSocket(), &rfds)||FD_ISSET(ch->GetSocket(), &wfds))
+                auto fd = ch->GetSocket();
+                if (FD_ISSET(fd, &rfds) || FD_ISSET(fd, &wfds))
                 {
                     actChannels.push_back(ch);
+                    FD_CLR(fd, &rfds);
+                    FD_CLR(fd, &wfds);
                 }
             }
         }
         else
         {
-            //printf("No data within five seconds.\n");
             return;
         }
     }

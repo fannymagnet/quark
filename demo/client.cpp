@@ -37,7 +37,7 @@ struct Sum {
 };
 
 int main() {
-    int thread_count = 1;
+    int thread_count = 20;
     int buf_size = 128;
     vector<Sum> results;
     for (int i = 0; i < thread_count; ++i)
@@ -77,6 +77,7 @@ int main() {
                     cout << "Message form server: " << sock << " bytes: " << nbytes << " disconnected" << endl;
                     break;
                 }
+                cout << sock << " read finished " << nbytes <<", begin next --" << endl;
                 ++s.out;
             }
 

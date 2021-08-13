@@ -27,47 +27,63 @@ namespace quark
     {
         uint8_t buf[1024] = {};
         std::list<Channel *> actChannels;
-        poller.Update(1, actChannels);
+        poller.Update(10000, actChannels);
         struct sockaddr addr;
-        socklen_t addr_len; 
+        socklen_t addr_len;
         for (auto ch : actChannels)
         {
             if (nullptr == ch)
                 continue;
-            if (ch->CurrentEvent() & EventAccept) {
-                int ret = accept(ch->GetSocket(), &addr, &addr_len);        
-                if (ret > 0) {
-                    Channel* chan = new Channel(ret);
+            if (ch->CurrentEvent() & EventAccept)
+            {
+                int ret = accept(ch->GetSocket(), &addr, &addr_len);
+                if (ret > 0)
+                {
+                    std::cout << "new socket: " << ret << " connected!" << std::endl;
+                    Channel *chan = new Channel(ret);
                     poller.AddChannel(chan);
                 }
             }
+            else
+            {
 
-            if (ch->WaitingSendBytes() > 0) {
-                // send data
-                uint32_t nv = 0;
-                iovec* vec = ch->get_write_vecs(nv);
-                auto bytes = writev(ch->GetSocket(), vec, nv);
-                ch->GetWriteBuffer().erase(bytes);
-            }
-
-            if (ch->InBfferCapcity() > 0) {
-                // decode msg
-                uint32_t nv = 0;
-                iovec* vec = ch->get_read_vecs(nv);
-                auto bytes = readv(ch->GetSocket(), vec, nv);
-                ch->GetReadBuffer().add(bytes);
-            }
-            // echo 
-            if (ch->CanRead()) {
-                while (ch->WaitingSendBytes() > 0) {
+                if (ch->WaitingSendBytes() > 0)
+                {
                     // send data
                     uint32_t nv = 0;
-                    iovec* vec = ch->get_write_vecs(nv);
+                    iovec *vec = ch->get_write_vecs(nv);
                     auto bytes = writev(ch->GetSocket(), vec, nv);
                     ch->GetWriteBuffer().erase(bytes);
                 }
-                auto count = ch->GetReadBuffer().get(buf, 1024);
-                ch->GetWriteBuffer().put(buf, count);
+
+                if (ch->InBfferCapcity() > 0)
+                {
+                    // decode msg
+                    uint32_t nv = 0;
+                    iovec *vec = ch->get_read_vecs(nv);
+                    auto bytes = readv(ch->GetSocket(), vec, nv);
+                    if (bytes < 0)
+                    {
+                        std::cout << "ERROR: socket: " << ch->GetSocket() << " recv " << bytes << " bytes!  errno: " << errno << std::endl;
+                        continue;
+                    }
+                    std::cout << "socket: " << ch->GetSocket() << " recv " << bytes << " bytes" << std::endl;
+                    ch->GetReadBuffer().add(bytes);
+                }
+                // echo
+                if (ch->CanRead())
+                {
+                    while (ch->WaitingSendBytes() > 0)
+                    {
+                        // send data
+                        uint32_t nv = 0;
+                        iovec *vec = ch->get_write_vecs(nv);
+                        auto bytes = writev(ch->GetSocket(), vec, nv);
+                        ch->GetWriteBuffer().erase(bytes);
+                    }
+                    auto count = ch->GetReadBuffer().get(buf, 1024);
+                    ch->GetWriteBuffer().put(buf, count);
+                }
             }
         }
     }
@@ -83,6 +99,7 @@ namespace quark
 
     void io_context::add_accept(int sock)
     {
+        std::cout << "add accept socket: " << sock << std::endl;
         Channel *chan = new Channel(sock);
         chan->SetEvent(EventAccept);
         m_channels.insert(std::make_pair((uint64_t)chan, chan));
