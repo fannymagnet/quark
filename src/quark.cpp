@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <sys/utsname.h>
 
 #include <arpa/inet.h>
@@ -30,6 +31,7 @@ namespace quark
         }
         co_return sum;
     }
+
     int Add(int a, int b)
     {
         auto co = CounterTimes(a, b, 5);
@@ -111,6 +113,16 @@ namespace quark
             if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
                 std::cout << "setsockopt(SO_REUSEADDR)" << std::endl;
         }
+        {
+            int on = 1;
+            int rc = ioctl(sock, FIONBIO, (char *)&on);
+            if (rc < 0)
+            {
+                perror("ioctl() failed");
+                close(sock);
+                exit(-1);
+            }
+        }
 
         //LOG(ERROR) << "setsockopt(SO_REUSEADDR)";
 
@@ -125,16 +137,23 @@ namespace quark
         if (bind(sock,
                  (const struct sockaddr *)&srv_addr,
                  sizeof(srv_addr)) < 0)
+        {
+
+            std::cout << "bind()" << std::endl;
             //LOG(ERROR) << "bind()";
+        }
 
-            if (listen(sock, 10) < 0)
-                //LOG(ERROR) << "listen()";
+        if (listen(sock, 10) < 0)
+        {
+            std::cout << "listen()" << std::endl;
+        }
+        //LOG(ERROR) << "listen()";
 
-                if (nullptr == ctx)
-                {
-                    //LOG(ERROR) << "io context is nullptr";
-                    exit(1);
-                }
+        if (nullptr == ctx)
+        {
+            //LOG(ERROR) << "io context is nullptr";
+            exit(1);
+        }
 
         ctx->add_accept(sock);
 

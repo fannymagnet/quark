@@ -1,4 +1,5 @@
 #include "select_poller.h"
+#include <algorithm>
 #ifdef WIN32
 #else
 #include <sys/select.h>
@@ -26,10 +27,11 @@ namespace quark
         {
             switch (ev.t)
             {
-            case PollerEventType::Add:
-                /* code */
+            case PollerEvent::PollerEventType::Add:
+                DirectAddChannle(ev.ch);
                 break;
-            case PollerEventType::Remove:
+            case PollerEvent::PollerEventType::Remove:
+                DirectRemoveChannle(ev.ch);
                 break;
             default:
                 break;
@@ -53,75 +55,73 @@ namespace quark
         {
             int fd = channels_[i]->GetSocket();
             auto ev = channels_[i]->CurrentEvent();
-            FD_SET(fd, &rfds);
+            bool isListenner = ev & EventAccept;
+            if (ev & EventRead || isListenner)
+                FD_SET(fd, &rfds);
 
-            if (ev & EventWrite)
-            {
+            if (ev & EventWrite && !isListenner)
                 FD_SET(fd, &wfds);
-            }
 
             if (fd > max_fd)
-            {
                 max_fd = fd;
-            }
         }
 
         struct timeval tv;
         tv.tv_sec = ms / 1000;
-        tv.tv_usec = ms & 1000 * 1000;
+        tv.tv_usec = ms % 1000 * 1000;
 
         int retval = select(max_fd + 1, &rfds, &wfds, 0, &tv);
-        if (retval == -1)
+
+        std::cout << "select result: " << retval << std::endl;
+        if (retval < 0)
         {
-            //perror("select()");
             return;
         }
-        else if (retval)
+        else if (retval > 0)
         {
             actChannels.clear();
-            //printf("Data is available now.\n");
-            bool hasEvent = false;
             for (size_t i = 0; i < channels_.size(); i++)
             {
                 auto ch = channels_[i];
-                if (FD_ISSET(ch->GetSocket(), &rfds))
-                {
-                    ch->SetEvent(EventRead);
-                    hasEvent = true;
-                }
-
-                if (FD_ISSET(ch->GetSocket(), &wfds))
-                {
-                    ch->SetEvent(EventWrite);
-                    hasEvent = true;
-                }
-                if (hasEvent)
+                auto fd = ch->GetSocket();
+                if (FD_ISSET(fd, &rfds) || FD_ISSET(fd, &wfds))
                 {
                     actChannels.push_back(ch);
-                    hasEvent = false;
+                    FD_CLR(fd, &rfds);
+                    FD_CLR(fd, &wfds);
                 }
             }
         }
         else
         {
-            //printf("No data within five seconds.\n");
             return;
         }
     }
 
     bool SelectPoller::AddChannel(Channel *channel)
     {
-        return events_.push(PollerEvent{PollerEventType::Add, channel});
+        return events_.push(PollerEvent{ PollerEvent::PollerEventType::Add, channel});
     }
 
     bool SelectPoller::RemoveChannel(Channel *channel)
     {
-        return events_.push(PollerEvent{PollerEventType::Remove, channel});
+        return events_.push(PollerEvent{ PollerEvent::PollerEventType::Remove, channel});
     }
 
-    void SelectPoller::DirectAddChannle(Channel* ch) {
+    void SelectPoller::DirectAddChannle(Channel *ch)
+    {
+        auto iter = std::find(channels_.begin(), channels_.end(), ch);
+        if (iter == channels_.end())
+        {
+            channels_.emplace_back(ch);
+        }
     }
-    void SelectPoller::DirectRemoveChannle(Channel* ch) {
-
+    void SelectPoller::DirectRemoveChannle(Channel *ch)
+    {
+        auto iter = std::find(channels_.begin(), channels_.end(), ch);
+        if (iter != channels_.end())
+        {
+            channels_.erase(iter);
+        }
     }
 }

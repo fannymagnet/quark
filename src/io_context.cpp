@@ -16,119 +16,80 @@ namespace quark
 
     bool io_context::init()
     {
-        // initialize io_uring
-        //struct io_uring_params params;
-        //memset(&params, 0, sizeof(params));
-        //params.sq_thread_idle = 200;
-        //int result = io_uring_queue_init_params(1024, &m_ring, &params);
-        //if (result < 0)
-        //{
-        //    ////LOG(ERROR) << "init uring queue failed! error: " << -result;
-        //    return false;
-        //}
-
-        //// check if IORING_FEAT_FAST_POLL is supported
-        //if (!(params.features & IORING_FEAT_FAST_POLL))
-        //{
-        //    //LOG(ERROR) << "IORING_FEAT_FAST_POLL not available in the kernel, quiting...\n";
-        //    return false;
-        //}
-
         return true;
     }
 
     io_context::~io_context()
     {
-        //io_uring_queue_exit(&m_ring);
     }
 
     void io_context::runOnce()
     {
+        uint8_t buf[1024] = {};
         std::list<Channel *> actChannels;
-        poller.Update(1, actChannels);
+        poller.Update(10000, actChannels);
+        struct sockaddr addr;
+        socklen_t addr_len;
         for (auto ch : actChannels)
         {
             if (nullptr == ch)
                 continue;
-            switch (ch->CurrentEvent())
+            if (ch->CurrentEvent() & EventAccept)
             {
-            case EventAccept:
-            case EventRead:
-            case EventWrite:
-            default:
-            break;
+                int ret = accept(ch->GetSocket(), &addr, &addr_len);
+                if (ret > 0)
+                {
+                    std::cout << "new socket: " << ret << " connected!" << std::endl;
+                    Channel *chan = new Channel(ret);
+                    poller.AddChannel(chan);
+                }
+            }
+            else
+            {
+                if (ch->WaitingSendBytes() > 0)
+                {
+                    // send data
+                    uint32_t nv = 0;
+                    iovec *vec = ch->get_write_vecs(nv);
+                    auto bytes = writev(ch->GetSocket(), vec, nv);
+                    ch->GetWriteBuffer().erase(bytes);
+                }
+
+                if (ch->InBfferCapcity() > 0)
+                {
+                    // decode msg
+                    uint32_t nv = 0;
+                    iovec *vec = ch->get_read_vecs(nv);
+                    auto bytes = readv(ch->GetSocket(), vec, nv);
+                    if (bytes < 0)
+                    {
+                        std::cout << "ERROR: socket: " << ch->GetSocket() << " recv " << bytes << " bytes!  errno: " << errno << std::endl;
+                        continue;
+                    } else if (bytes == 0) {
+                        poller.RemoveChannel(ch);
+                        std::cout << "socket: " << ch->GetSocket() << " disconnected!" << std::endl;
+                        ::close(ch->GetSocket());
+                    } else {
+                    std::cout << "socket: " << ch->GetSocket() << " recv " << bytes << " bytes" << std::endl;
+                    ch->GetReadBuffer().add(bytes);
+                    }
+                }
+                // echo
+                if (ch->CanRead())
+                {
+                    while (ch->WaitingSendBytes() > 0)
+                    {
+                        // send data
+                        uint32_t nv = 0;
+                        iovec *vec = ch->get_write_vecs(nv);
+                        auto bytes = writev(ch->GetSocket(), vec, nv);
+                        ch->GetWriteBuffer().erase(bytes);
+                    }
+                    auto count = ch->GetReadBuffer().get(buf, 1024);
+                    ch->GetWriteBuffer().put(buf, count);
+                }
             }
         }
-        //        struct io_uring_cqe *cqe;
-        //        unsigned head;
-        //        unsigned count = 0;
-        //        // go through all CQEs
-        //        io_uring_for_each_cqe(&m_ring, head, cqe)
-        //        {
-        //            ++count;
-        //            Channel *req = (Channel *)io_uring_cqe_get_data(cqe);
-        //            ;
-        //            switch (req->CurrentEvent())
-        //            {
-        //            case EventAccept:
-        //            {
-        //                struct sockaddr_in client_addr;
-        //                socklen_t client_len = sizeof(client_addr);
-        //                int sock_conn_fd = cqe->res;
-        //                // only read when there is no error, >= 0
-        //                if (sock_conn_fd >= 0)
-        //                {
-        //                    Channel *chan = new Channel(sock_conn_fd);
-        //                    m_channels.insert(std::make_pair((uint64_t)chan, chan));
-        //                    m_SocketToChannels.insert(std::make_pair(sock_conn_fd, chan));
-        //                    add_channel_read(chan);
-        //                    //LOG(INFO) << "ACCEPT => " << req->GetSocket() << " Read new connection: " << sock_conn_fd;
-        //                }
-        //                add_channel_accept(req, (sockaddr *)&client_addr, &client_len);
-        //                //LOG(INFO) << "ACCEPT => Accpet again";
-        //                break;
-        //            }
-        //            case EventRead:
-        //            {
-        //                int bytes_read = cqe->res;
-        //                if (cqe->res <= 0)
-        //                {
-        //                    // connection closed or error
-        //                    shutdown(req->GetSocket(), SHUT_RDWR);
-        //                    //LOG(INFO) << "socket disconnect: " << req->GetSocket() << " error: " << errno << " res: " << cqe->res;
-        //                    m_channels.erase((uint64_t)req);
-        //                    m_SocketToChannels.erase(req->GetSocket());
-        //                    delete req;
-        //                }
-        //                else
-        //                {
-        //                    // todo: bytes have been read into bufs, now add write to socket sqe
-        //                    //LOG(INFO) << "socket: " << req->GetSocket() << " read " << bytes_read << " bytes";
-        //                    req->GetBuffer().add(bytes_read);
-        //                    add_channel_write(req);
-        //                }
-        //                break;
-        //            }
-        //            case EventWrite:
-        //            {
-        //                if (cqe->res <= 0)
-        //                {
-        //                    //LOG(INFO) << "socket write to client error " << cqe->res;
-        //                }
-        //                else
-        //                {
-        //                    //LOG(INFO) << "socket write to client " << req->GetSocket() << " complete " << cqe->res;
-        //                }
-        //                req->GetBuffer().erase(cqe->res);
-        //                add_channel_read(req);
-        //                break;
-        //            }
-        //            default:
-        //                break;
-        //            }
-        //        }
-        //        /* Mark this request as processed */
-        //        io_uring_cq_advance(&m_ring, count);
     }
 
     void io_context::run()
@@ -136,16 +97,19 @@ namespace quark
         while (true)
         {
             runOnce();
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
 
     void io_context::add_accept(int sock)
     {
+        std::cout << "add accept socket: " << sock << std::endl;
         Channel *chan = new Channel(sock);
+        chan->SetEvent(EventAccept);
         m_channels.insert(std::make_pair((uint64_t)chan, chan));
         m_SocketToChannels.insert(std::make_pair(sock, chan));
-        add_channel_accept(chan, nullptr, nullptr);
+        poller.AddChannel(chan);
+        //add_channel_accept(chan, nullptr, nullptr);
     }
 
     void io_context::add_channel_accept(Channel *chan, sockaddr *client_addr, socklen_t *client_len)

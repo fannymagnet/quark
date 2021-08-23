@@ -6,16 +6,19 @@
 #include "poller.h"
 #include "safe_queue.h"
 
-namespace quark {
-    enum PollerEventType {
-        Add,
-        Remove,
-    }
+namespace quark
+{
+    struct PollerEvent
+    {
+        enum PollerEventType
+        {
+            Add,
+            Remove,
+        };
 
-    struct PollerEvent {
-        PollerEventType t; 
-        Channel* ch;
-    }; 
+        PollerEventType t;
+        Channel *ch;
+    };
 
     class SelectPoller : public Poller
     {
@@ -24,16 +27,18 @@ namespace quark {
         virtual ~SelectPoller();
 
         virtual void RunInPoller(std::function<void()> func);
-        virtual void Update(uint32_t ms, std::list<Channel*>& actChannels);
+        virtual void Update(uint32_t ms, std::list<Channel *> &actChannels);
 
-        virtual bool AddChannel(Channel*);
-        virtual bool RemoveChannel(Channel*);
+        virtual bool AddChannel(Channel *);
+        virtual bool RemoveChannel(Channel *);
+
     private:
-        void DirectAddChannle(Channel* ch);
-        void DirectRemoveChannle(Channel* ch);
+        void DirectAddChannle(Channel *ch);
+        void DirectRemoveChannle(Channel *ch);
+
     private:
         SafeQueue<std::function<void()>> tasks_;
         SafeQueue<PollerEvent> events_;
-        std::vector<Channel*> channels_;
+        std::vector<Channel *> channels_;
     };
 }

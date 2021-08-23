@@ -20,7 +20,7 @@ namespace quark
     struct EventInfo
     {
         int fd;
-        EventType type;
+        uint16_t type;
         uint16_t size;
     };
 
@@ -33,29 +33,39 @@ namespace quark
         ~Channel();
 
         int GetSocket() { return m_rawfd; }
-        EventType CurrentEvent() { return m_state.type; }
-        void SetEvent(EventType t) { m_state.type = t; }
+        uint16_t CurrentEvent();  
+        void SetEvent(uint16_t t) { m_state.type = t; }
 
-        RingBuffer &GetBuffer()
-        {
-            return m_buff;
-        }
+        inline RingBuffer &GetWriteBuffer() { return write_buff_; }
+        inline RingBuffer &GetReadBuffer() { return read_buff_; }
 
         struct iovec *get_write_vecs(uint32_t &nv);
         struct iovec *get_read_vecs(uint32_t &nv);
 
+        // channel 接收网络消息的缓冲区是否还有数据 
+        bool CanRead();
+
+        // channel 接收网络消息的缓冲区空间大小 
+        uint32_t InBfferCapcity();
+
+        // channel 网络消息的发送缓冲区空间大小 
+        uint32_t OutBufferCapcity();
+
+        // channel 网络消息的发送缓冲区是否还有未发送数据 
+        uint32_t WaitingSendBytes();
+
     private:
         /* data */
         int m_rawfd;
-        EventType m_event;
         EventInfo m_state;
         //todo: add two ring buffer for write and read
         uint16_t m_dataCount = 0;
-        RingBuffer m_buff;
+        RingBuffer write_buff_;
+        RingBuffer read_buff_;
 
         struct iovec read_vecs[2];
         struct iovec write_vecs[2];
-        std::array<uint8_t, MaxBufferSize> m_write_buff;
+        //std::array<uint8_t, MaxBufferSize> m_write_buff;
     };
 
 }
