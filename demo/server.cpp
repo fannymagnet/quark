@@ -19,6 +19,11 @@ int main(){
     }
 
     int serv_socket = quark::setup_listening_socket(ctx, 8888);
+    if (serv_socket < 0)
+    {
+        exit(1);
+    }
+    cout << "server_socket begin listen: " << serv_socket << endl;
     try 
     {
         ctx->run();
