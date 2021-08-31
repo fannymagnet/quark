@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include <memory.h>
+#include "log.h"
 
 //using namespace el::base::debug;
 //using namespace el::base::type;
@@ -27,26 +28,31 @@ namespace quark
     {
         uint8_t buf[1024] = {};
         std::list<Channel *> actChannels;
-        poller.Update(10000, actChannels);
+        poller.Update(1000, actChannels);
         struct sockaddr addr;
         socklen_t addr_len;
         for (auto ch : actChannels)
         {
             if (nullptr == ch)
                 continue;
-            if (ch->CurrentEvent() & EventAccept)
+
+            Debug(LOCATION, "socket", ch->GetSocket(), " is Listenner: ", ch->IsListenr());
+            if (ch->IsListenr())
             {
-                int ret = accept(ch->GetSocket(), &addr, &addr_len);
-                if (ret > 0)
+                if ((ch->CurrentEvent() & EventRead) > 0)
                 {
-                    std::cout << "new socket: " << ret << " connected!" << std::endl;
-                    Channel *chan = new Channel(ret);
-                    poller.AddChannel(chan);
+                    int ret = accept(ch->GetSocket(), &addr, &addr_len);
+                    if (ret > 0)
+                    {
+                        std::cout << "new socket: " << ret << " connected!" << std::endl;
+                        Channel *chan = new Channel(ret);
+                        poller.AddChannel(chan);
+                    }
                 }
             }
             else
             {
-                if (ch->WaitingSendBytes() > 0)
+                if ((ch->CurrentEvent() & EventWrite) > 0 && ch->WaitingSendBytes() > 0)
                 {
                     // send data
                     uint32_t nv = 0;
@@ -55,7 +61,7 @@ namespace quark
                     ch->GetWriteBuffer().erase(bytes);
                 }
 
-                if (ch->InBfferCapcity() > 0)
+                if ((ch->CurrentEvent() & EventRead) > 0 && ch->InBfferCapcity() > 0)
                 {
                     // decode msg
                     uint32_t nv = 0;
@@ -63,15 +69,19 @@ namespace quark
                     auto bytes = readv(ch->GetSocket(), vec, nv);
                     if (bytes < 0)
                     {
-                        std::cout << "ERROR: socket: " << ch->GetSocket() << " recv " << bytes << " bytes!  errno: " << errno << std::endl;
+                        //Debug(LOCATION, "ERROR: socket: " , ch->GetSocket() , " recv " , bytes , " bytes!  errno: " ,errno );
                         continue;
-                    } else if (bytes == 0) {
+                    }
+                    else if (bytes == 0)
+                    {
                         poller.RemoveChannel(ch);
-                        std::cout << "socket: " << ch->GetSocket() << " disconnected!" << std::endl;
+                        Debug(LOCATION, "INFO: socket: " , ch->GetSocket() , " disconnected!" );
                         ::close(ch->GetSocket());
-                    } else {
-                    std::cout << "socket: " << ch->GetSocket() << " recv " << bytes << " bytes" << std::endl;
-                    ch->GetReadBuffer().add(bytes);
+                    }
+                    else
+                    {
+                        std::cout << "socket: " << ch->GetSocket() << " recv " << bytes << " bytes" << std::endl;
+                        ch->GetReadBuffer().add(bytes);
                     }
                 }
                 // echo
@@ -88,6 +98,11 @@ namespace quark
                     auto count = ch->GetReadBuffer().get(buf, 1024);
                     ch->GetWriteBuffer().put(buf, count);
                 }
+
+                if (ch->WaitingSendBytes() <= 0)
+                {
+                    ch->RemoveEvent(EventWrite);
+                }
             }
         }
     }
@@ -97,7 +112,7 @@ namespace quark
         while (true)
         {
             runOnce();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
 
@@ -109,7 +124,6 @@ namespace quark
         m_channels.insert(std::make_pair((uint64_t)chan, chan));
         m_SocketToChannels.insert(std::make_pair(sock, chan));
         poller.AddChannel(chan);
-        //add_channel_accept(chan, nullptr, nullptr);
     }
 
     void io_context::add_channel_accept(Channel *chan, sockaddr *client_addr, socklen_t *client_len)

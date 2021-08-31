@@ -1,4 +1,5 @@
 #include "select_poller.h"
+#include "log.h"
 #include <algorithm>
 #ifdef WIN32
 #else
@@ -55,11 +56,14 @@ namespace quark
         {
             int fd = channels_[i]->GetSocket();
             auto ev = channels_[i]->CurrentEvent();
-            bool isListenner = ev & EventAccept;
+            bool isListenner = channels_[i]->IsListenr();
             if (ev & EventRead || isListenner)
+            {
                 FD_SET(fd, &rfds);
+                //Debug("add read fd:" + std::to_string(fd));
+            }
 
-            if (ev & EventWrite && !isListenner)
+            if (channels_[i]->WaitingSendBytes() > 0 && !isListenner)
                 FD_SET(fd, &wfds);
 
             if (fd > max_fd)
@@ -84,11 +88,22 @@ namespace quark
             {
                 auto ch = channels_[i];
                 auto fd = ch->GetSocket();
-                if (FD_ISSET(fd, &rfds) || FD_ISSET(fd, &wfds))
+                bool event = false;
+                if (FD_ISSET(fd, &rfds) )
                 {
-                    actChannels.push_back(ch);
+                    event = true;
+                    ch->SetEvent(EventRead);
                     FD_CLR(fd, &rfds);
+                }
+                if (FD_ISSET(fd, &wfds))
+                {
+                    event = true;
+                    ch->SetEvent(EventWrite);
                     FD_CLR(fd, &wfds);
+                }
+                if (event)
+                {
+                    actChannels.emplace_back(ch);
                 }
             }
         }

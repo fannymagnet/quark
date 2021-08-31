@@ -34,7 +34,8 @@ namespace quark
 
         int GetSocket() { return m_rawfd; }
         uint16_t CurrentEvent();  
-        void SetEvent(uint16_t t) { m_state.type = t; }
+        void SetEvent(uint16_t t);
+        void RemoveEvent(uint16_t t);
 
         inline RingBuffer &GetWriteBuffer() { return write_buff_; }
         inline RingBuffer &GetReadBuffer() { return read_buff_; }
@@ -44,6 +45,9 @@ namespace quark
 
         // channel 接收网络消息的缓冲区是否还有数据 
         bool CanRead();
+        bool IsListenr() {
+            return is_listener_;
+        }
 
         // channel 接收网络消息的缓冲区空间大小 
         uint32_t InBfferCapcity();
@@ -57,6 +61,7 @@ namespace quark
     private:
         /* data */
         int m_rawfd;
+        bool is_listener_;
         EventInfo m_state;
         //todo: add two ring buffer for write and read
         uint16_t m_dataCount = 0;

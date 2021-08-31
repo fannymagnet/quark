@@ -3,20 +3,21 @@
 #include <vector>
 #include <list>
 
-#include <timer.h>
+#include "timer.h"
 
 namespace quark
 {
     class TimerWheel
     {
-        using ScaleType = std::list<TimerNode *>;
+        using ScaleType = TimerNode *;
         using WheelType = std::vector<ScaleType>;
         using WheelArray = std::vector<WheelType>;
     public:
-        TimerWheel() {}
-        ~TimerWheel() {}
+        TimerWheel();
+        ~TimerWheel();
 
         bool AddTimer(TimerNode *timer);
+        bool RemoveTimer(TimerNode *timer);
         void Update();
 
     private:

@@ -1,13 +1,21 @@
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "channel.h"
+#include "log.h"
 //#include "easylogging++.h"
 //using namespace el::base::debug;
 //using namespace el::base::type;
 
 namespace quark
 {
-    Channel::Channel(int fd)
+    Channel::Channel(int fd) : is_listener_(false)
     {
         m_rawfd = fd;
+
+        int flags = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
         m_state.size = 0;
         m_state.type = EventIdle;
         m_state.fd = m_rawfd;
@@ -22,9 +30,42 @@ namespace quark
     }
     */
     }
+
+    void Channel::SetEvent(uint16_t t)
+    {
+        //Debug(LOCATION, "socket ", m_rawfd, " set event: ", t);
+        // todo: fix this
+        if ((t & EventAccept) != 0)
+        {
+            is_listener_ = true;
+            //Debug(LOCATION, "socket ", m_rawfd, " set listener", is_listener_);
+        }
+
+        if ((t & EventRead) != 0)
+        {
+            m_state.type |= EventRead;
+            //Debug(LOCATION, "socket ", m_rawfd, " set read");
+        }
+
+        if ((t & EventWrite) != 0)
+        {
+            m_state.type |= EventWrite;
+            //Debug(LOCATION, "socket ", m_rawfd, " set write");
+        }
+    }
+
+    void Channel::RemoveEvent(uint16_t t)
+    {
+        if ((t & m_state.type) != 0)
+        {
+            m_state.type &= ~t;
+            //Debug(LOCATION, "socket ", m_rawfd, " set write");
+        }
+    }
+
     uint16_t Channel::CurrentEvent()
     {
-        bool hasAccpet = (m_state.type & EventAccept) ? true : false;
+        //bool hasAccpet = (m_state.type & EventAccept) ? true : false;
         if (InBfferCapcity() > 0)
         {
             m_state.type |= EventRead;
@@ -34,10 +75,10 @@ namespace quark
         {
             m_state.type |= EventWrite;
         }
-        if (hasAccpet)
-        {
-            m_state.type |= EventAccept;
-        }
+        //if (hasAccpet)
+        //{
+        //    m_state.type |= EventAccept;
+        //}
         return m_state.type;
     }
 

@@ -18,6 +18,7 @@ namespace quark
 {
     //INITIALIZE_EASYLOGGINGPP
 
+    /*
     CoTask<int> CounterTimes(int a, int b, int c)
     {
         int sum = 0;
@@ -31,11 +32,12 @@ namespace quark
         }
         co_return sum;
     }
+*/
 
     int Add(int a, int b)
     {
-        auto co = CounterTimes(a, b, 5);
-        std::cout << " coroutine return value = " << co.GetValue().value_or(-1) << std::endl;
+        //auto co = CounterTimes(a, b, 5);
+        //std::cout << " coroutine return value = " << co.GetValue().value_or(-1) << std::endl;
         return a + b;
     }
 
@@ -106,12 +108,18 @@ namespace quark
 
         sock = socket(PF_INET, SOCK_STREAM, 0);
         if (sock == -1)
+        {
+            return -1;
+        }
         //LOG(ERROR) << "socket()";
 
         {
             int enable = 1;
             if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+            {
                 std::cout << "setsockopt(SO_REUSEADDR)" << std::endl;
+                return -1;
+            }
         }
         {
             int on = 1;
@@ -134,18 +142,20 @@ namespace quark
         /* We bind to a port and turn this socket into a listening
      * socket.
      * */
-        if (bind(sock,
+        int bind_result = bind(sock,
                  (const struct sockaddr *)&srv_addr,
-                 sizeof(srv_addr)) < 0)
+                 sizeof(srv_addr));
+        if (bind_result< 0)
         {
 
-            std::cout << "bind()" << std::endl;
-            //LOG(ERROR) << "bind()";
+            std::cout << "bind() => " << bind_result << std::endl;
+            return -1;
         }
 
         if (listen(sock, 10) < 0)
         {
             std::cout << "listen()" << std::endl;
+            return -1;
         }
         //LOG(ERROR) << "listen()";
 

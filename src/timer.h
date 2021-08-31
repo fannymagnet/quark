@@ -25,7 +25,11 @@ namespace quark
 		uint64_t GetTickTime();
 
 	private:
+		TimerNode* prev_;
+		TimerNode* next_;
+
 		uint64_t tick_time_;
+		int32_t interval_;   // >= 0 means real interval, < 0 means run once
 	};
 
 	class Timer
