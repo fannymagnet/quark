@@ -37,7 +37,7 @@ struct Sum {
 };
 
 int main() {
-    int thread_count = 20;
+    int thread_count = 6;
     int buf_size = 128;
     vector<Sum> results;
     for (int i = 0; i < thread_count; ++i)
