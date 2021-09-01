@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "noncopyable.h"
+#include "../noncopyable.h"
 #include <sys/select.h>
 #include <unistd.h>
 
@@ -10,8 +10,8 @@ namespace quark
     class PosixFdSet : NonCopyable
     {
     public:
-        PosixFdSet(/* args */);
-        ~PosixFdSet();
+        PosixFdSet(/* args */) { Reset(); }
+        ~PosixFdSet() { Reset();}
 
         void Reset()
         {
@@ -29,18 +29,16 @@ namespace quark
             return FD_ISSET(fd, &fd_set_) != 0;
         }
 
+        void Clear(socket_type fd)
+        {
+            FD_CLR(fd, &fd_set_);
+        }
+
+        fd_set* Raw(){
+            return &fd_set_;
+        }
+
     private:
         fd_set fd_set_;
     };
-
-    PosixFdSet::PosixFdSet(/* args */)
-    {
-        Reset();
-    }
-
-    PosixFdSet::~PosixFdSet()
-    {
-        Reset();
-    }
-
 } // namespace quark

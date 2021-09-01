@@ -36,7 +36,7 @@ namespace quark
             if (nullptr == ch)
                 continue;
 
-            Debug(LOCATION, "socket", ch->GetSocket(), " is Listenner: ", ch->IsListenr());
+            //Debug(LOCATION, "socket", ch->GetSocket(), " is Listenner: ", ch->IsListenr());
             if (ch->IsListenr())
             {
                 if ((ch->CurrentEvent() & EventRead) > 0)
@@ -44,7 +44,7 @@ namespace quark
                     int ret = accept(ch->GetSocket(), &addr, &addr_len);
                     if (ret > 0)
                     {
-                        std::cout << "new socket: " << ret << " connected!" << std::endl;
+                        Debug(LOCATION, "new socket: ", ret, " connected!");
                         Channel *chan = new Channel(ret);
                         poller.AddChannel(chan);
                     }
@@ -80,7 +80,7 @@ namespace quark
                     }
                     else
                     {
-                        std::cout << "socket: " << ch->GetSocket() << " recv " << bytes << " bytes" << std::endl;
+                        //Debug(LOCATION, "socket: ", ch->GetSocket(), " recv ", bytes, " bytes");
                         ch->GetReadBuffer().add(bytes);
                     }
                 }

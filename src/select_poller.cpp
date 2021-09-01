@@ -45,11 +45,8 @@ namespace quark
             handle();
         }
 
-        fd_set rfds;
-        fd_set wfds;
-
-        FD_ZERO(&rfds);
-        FD_ZERO(&wfds);
+        rfds_.Reset();
+        wfds_.Reset();
 
         int max_fd = 0;
         for (size_t i = 0; i < channels_.size(); i++)
@@ -59,12 +56,12 @@ namespace quark
             bool isListenner = channels_[i]->IsListenr();
             if (ev & EventRead || isListenner)
             {
-                FD_SET(fd, &rfds);
+                rfds_.Set(fd);
                 //Debug("add read fd:" + std::to_string(fd));
             }
 
             if (channels_[i]->WaitingSendBytes() > 0 && !isListenner)
-                FD_SET(fd, &wfds);
+                wfds_.Set(fd);
 
             if (fd > max_fd)
                 max_fd = fd;
@@ -74,9 +71,9 @@ namespace quark
         tv.tv_sec = ms / 1000;
         tv.tv_usec = ms % 1000 * 1000;
 
-        int retval = select(max_fd + 1, &rfds, &wfds, 0, &tv);
+        int retval = select(max_fd + 1, rfds_.Raw(), wfds_.Raw(), 0, &tv);
 
-        std::cout << "select result: " << retval << std::endl;
+        //std::cout << "select result: " << retval << std::endl;
         if (retval < 0)
         {
             return;
@@ -89,17 +86,17 @@ namespace quark
                 auto ch = channels_[i];
                 auto fd = ch->GetSocket();
                 bool event = false;
-                if (FD_ISSET(fd, &rfds) )
+                if (rfds_.IsSet(fd))
                 {
                     event = true;
                     ch->SetEvent(EventRead);
-                    FD_CLR(fd, &rfds);
+                    rfds_.Clear(fd);
                 }
-                if (FD_ISSET(fd, &wfds))
+                if (wfds_.IsSet(fd))
                 {
                     event = true;
                     ch->SetEvent(EventWrite);
-                    FD_CLR(fd, &wfds);
+                    wfds_.Clear(fd);
                 }
                 if (event)
                 {

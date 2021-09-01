@@ -5,6 +5,7 @@
 #include "channel.h"
 #include "poller.h"
 #include "safe_queue.h"
+#include "platforms/platform.h"
 
 namespace quark
 {
@@ -40,5 +41,8 @@ namespace quark
         SafeQueue<std::function<void()>> tasks_;
         SafeQueue<PollerEvent> events_;
         std::vector<Channel *> channels_;
+
+        FdSetAdapter rfds_;
+        FdSetAdapter wfds_;
     };
 }

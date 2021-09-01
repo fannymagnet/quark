@@ -1,9 +1,10 @@
 #pragma once
 #include "common.h"
-#include "noncopyable.h"
+#include "../noncopyable.h"
 
 namespace quark
 {
+#if defined(WIN32) || defined(WIN64)
     class WinFdSet : NonCopyable
     {
     public:
@@ -26,6 +27,16 @@ namespace quark
             return FD_ISSET(fd, &fd_set_) != 0;
         }
 
+        void IsSet(socket_type fd)
+        {
+            FD_CLR(fd, &fd_set_);
+        }
+
+        fd_set* Raw()
+        {
+            return &fd_set_;
+        }
+
     private:
         fd_set fd_set_;
     };
@@ -39,4 +50,5 @@ namespace quark
     {
         Reset();
     }
+#endif
 } // namespace quark

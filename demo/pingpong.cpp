@@ -67,7 +67,7 @@ int main() {
                 memset(send_buffer, 1, sizeof(send_buffer));
                 write(sock, send_buffer, sizeof(send_buffer)-1);
                 ++s.in;
-                cout << sock << " write finished, begin read --" << endl;
+                //cout << sock << " write finished, begin read --" << endl;
 
                 //读取服务器传回的数据
                 char buffer[buf_size];
@@ -77,7 +77,7 @@ int main() {
                     cout << "Message form server: " << sock << " bytes: " << nbytes << " disconnected" << endl;
                     break;
                 }
-                cout << sock << " read finished " << nbytes <<", begin next --" << endl;
+                //cout << sock << " read finished " << nbytes <<", begin next --" << endl;
                 ++s.out;
             }
 
