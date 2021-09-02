@@ -55,18 +55,13 @@ namespace quark
                 if ((ch->CurrentEvent() & EventWrite) > 0 && ch->WaitingSendBytes() > 0)
                 {
                     // send data
-                    uint32_t nv = 0;
-                    iovec *vec = ch->get_write_vecs(nv);
-                    auto bytes = writev(ch->GetSocket(), vec, nv);
-                    ch->GetWriteBuffer().erase(bytes);
+                    ch->Send();
                 }
 
                 if ((ch->CurrentEvent() & EventRead) > 0 && ch->InBfferCapcity() > 0)
                 {
                     // decode msg
-                    uint32_t nv = 0;
-                    iovec *vec = ch->get_read_vecs(nv);
-                    auto bytes = readv(ch->GetSocket(), vec, nv);
+                    auto bytes = ch->Recieve();
                     if (bytes < 0)
                     {
                         //Debug(LOCATION, "ERROR: socket: " , ch->GetSocket() , " recv " , bytes , " bytes!  errno: " ,errno );
@@ -78,11 +73,6 @@ namespace quark
                         Debug(LOCATION, "INFO: socket: " , ch->GetSocket() , " disconnected!" );
                         ::close(ch->GetSocket());
                     }
-                    else
-                    {
-                        //Debug(LOCATION, "socket: ", ch->GetSocket(), " recv ", bytes, " bytes");
-                        ch->GetReadBuffer().add(bytes);
-                    }
                 }
                 // echo
                 if (ch->CanRead())
@@ -90,10 +80,7 @@ namespace quark
                     while (ch->WaitingSendBytes() > 0)
                     {
                         // send data
-                        uint32_t nv = 0;
-                        iovec *vec = ch->get_write_vecs(nv);
-                        auto bytes = writev(ch->GetSocket(), vec, nv);
-                        ch->GetWriteBuffer().erase(bytes);
+                        ch->Send();
                     }
                     auto count = ch->GetReadBuffer().get(buf, 1024);
                     ch->GetWriteBuffer().put(buf, count);

@@ -129,4 +129,24 @@ namespace quark
     {
         return write_buff_.readable_bytes();
     }
+
+    void Channel::Send()
+    {
+        uint32_t nv = 0;
+        iovec *vec = get_write_vecs(nv);
+        auto bytes = writev(GetSocket(), vec, nv);
+        GetWriteBuffer().erase(bytes);
+    }
+
+    int Channel::Recieve()
+    {
+        uint32_t nv = 0;
+        iovec *vec = get_read_vecs(nv);
+        auto bytes = readv(GetSocket(), vec, nv);
+        if (bytes > 0)
+        {
+            GetReadBuffer().add(bytes);
+        }
+        return bytes;
+    }
 } // namespace quark

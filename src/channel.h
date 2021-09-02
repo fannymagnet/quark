@@ -40,6 +40,9 @@ namespace quark
         inline RingBuffer &GetWriteBuffer() { return write_buff_; }
         inline RingBuffer &GetReadBuffer() { return read_buff_; }
 
+        void Send();
+        int Recieve();
+
         struct iovec *get_write_vecs(uint32_t &nv);
         struct iovec *get_read_vecs(uint32_t &nv);
 
