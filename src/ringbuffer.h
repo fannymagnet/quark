@@ -1,9 +1,8 @@
 #pragma once
 
+#include "platforms/platform.h"
 #include <atomic>
-#include <sys/uio.h>
 using namespace std;
-using ::iovec;
 
 namespace quark
 {
@@ -30,8 +29,8 @@ namespace quark
 			return buffer_size - readable_bytes();
 		}
 
-		void get_writeable_buffer(struct iovec *vec, uint32_t &nv);
-		void get_readable_buffer(struct iovec *vec, uint32_t &nv);
+		void get_writeable_buffer(MultiIoBuf& buf);
+		void get_readable_buffer(MultiIoBuf& buf);
 
 	private:
 		/* data */

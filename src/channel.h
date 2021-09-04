@@ -2,9 +2,9 @@
 
 #include <iostream>
 #include <array>
-#include <sys/uio.h>
 
 #include "ringbuffer.h"
+#include "platforms/platform.h"
 
 
 namespace quark
@@ -43,8 +43,8 @@ namespace quark
         void Send();
         int Recieve();
 
-        struct iovec *get_write_vecs(uint32_t &nv);
-        struct iovec *get_read_vecs(uint32_t &nv);
+        MultiIoBuf& get_write_vecs();
+        MultiIoBuf& get_read_vecs();
 
         // channel 接收网络消息的缓冲区是否还有数据 
         bool CanRead();
@@ -71,9 +71,8 @@ namespace quark
         RingBuffer write_buff_;
         RingBuffer read_buff_;
 
-        struct iovec read_vecs[2];
-        struct iovec write_vecs[2];
-        //std::array<uint8_t, MaxBufferSize> m_write_buff;
+        MultiIoBuf read_vecs;
+        MultiIoBuf write_vecs;
     };
 
 }

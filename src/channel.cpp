@@ -23,12 +23,6 @@ namespace quark
 
     Channel::~Channel()
     {
-        /*
-    if (nullptr != m_state) {
-        delete m_state;
-        m_state = nullptr;
-    }
-    */
     }
 
     void Channel::SetEvent(uint16_t t)
@@ -65,7 +59,6 @@ namespace quark
 
     uint16_t Channel::CurrentEvent()
     {
-        //bool hasAccpet = (m_state.type & EventAccept) ? true : false;
         if (InBfferCapcity() > 0)
         {
             m_state.type |= EventRead;
@@ -75,39 +68,7 @@ namespace quark
         {
             m_state.type |= EventWrite;
         }
-        //if (hasAccpet)
-        //{
-        //    m_state.type |= EventAccept;
-        //}
         return m_state.type;
-    }
-
-    struct iovec *Channel::get_write_vecs(uint32_t &nv)
-    {
-        unsigned int nr_vecs = 2;
-        for (size_t i = 0; i < 2; ++i)
-        {
-            write_vecs[i].iov_base = nullptr;
-            write_vecs[i].iov_len = 0;
-        }
-
-        write_buff_.get_readable_buffer(write_vecs, nr_vecs);
-        nv = nr_vecs;
-        return write_vecs;
-    }
-
-    struct iovec *Channel::get_read_vecs(uint32_t &nv)
-    {
-        unsigned int nr_vecs = 2;
-        for (size_t i = 0; i < 2; ++i)
-        {
-            read_vecs[i].iov_base = nullptr;
-            read_vecs[i].iov_len = 0;
-        }
-
-        read_buff_.get_writeable_buffer(read_vecs, nr_vecs);
-        nv = nr_vecs;
-        return read_vecs;
     }
 
     bool Channel::CanRead()
@@ -133,20 +94,34 @@ namespace quark
     void Channel::Send()
     {
         uint32_t nv = 0;
-        iovec *vec = get_write_vecs(nv);
-        auto bytes = writev(GetSocket(), vec, nv);
+        auto& vec = get_write_vecs();
+        auto bytes = writev(GetSocket(), vec.Data(), vec.BufCount());
         GetWriteBuffer().erase(bytes);
     }
 
     int Channel::Recieve()
     {
         uint32_t nv = 0;
-        iovec *vec = get_read_vecs(nv);
-        auto bytes = readv(GetSocket(), vec, nv);
+        auto& vec = get_read_vecs();
+        auto bytes = readv(GetSocket(), vec.Data(), vec.BufCount());
         if (bytes > 0)
         {
             GetReadBuffer().add(bytes);
         }
         return bytes;
+    }
+
+    MultiIoBuf& Channel::get_write_vecs()
+    {
+        write_vecs.Clear();
+        write_buff_.get_readable_buffer(write_vecs);
+        return write_vecs;
+    }
+
+    MultiIoBuf& Channel::get_read_vecs()
+    {
+        read_vecs.Clear();
+        read_buff_.get_writeable_buffer(read_vecs);
+        return read_vecs;
     }
 } // namespace quark

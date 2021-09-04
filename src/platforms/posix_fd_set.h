@@ -2,11 +2,10 @@
 
 #include "common.h"
 #include "../noncopyable.h"
-#include <sys/select.h>
-#include <unistd.h>
 
 namespace quark
 {
+#if !defined(WIN32) && !defined(WIN64)
     class PosixFdSet : NonCopyable
     {
     public:
@@ -41,4 +40,5 @@ namespace quark
     private:
         fd_set fd_set_;
     };
+#endif
 } // namespace quark

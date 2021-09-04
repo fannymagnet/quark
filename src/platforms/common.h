@@ -8,11 +8,17 @@
 namespace quark
 {
     typedef SOCKET socket_type;
+    typedef WSADATA buf_type;
 }
 
 #else
+#include <unistd.h>
+#include <sys/select.h>
+#include <sys/uio.h>
+
 namespace quark
 {
     typedef int socket_type;
+    typedef iovec buf_type;
 }
 #endif
