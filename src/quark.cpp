@@ -11,7 +11,7 @@
 #include <memory>
 #include <cstring>
 
-#include "liburing.h"
+//#include "liburing.h"
 //#include "easylogging++.h"
 
 namespace quark
@@ -82,6 +82,7 @@ namespace quark
         "IORING_OP_MKDIRAT",
     };
 
+/*
     int check_io_uring_function()
     {
         struct utsname u;
@@ -100,6 +101,7 @@ namespace quark
         free(probe);
         return 0;
     }
+    */
 
     int setup_listening_socket(io_context *ctx, int port)
     {

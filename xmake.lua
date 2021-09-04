@@ -10,7 +10,7 @@ set_version("1.0.0", {build = "%Y%m%d%H%M"})
 -- set language
 set_languages("c99", "cxx20")
 
-add_cxxflags("-fcoroutines")
+-- add_cxxflags("-fcoroutines")
 
 -- include project sources
 includes("src", "test", "demo")
