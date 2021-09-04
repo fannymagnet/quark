@@ -14,7 +14,6 @@
 #include <netinet/in.h>
 #endif
 
-//#include "liburing.h"
 #include "noncopyable.h"
 #include "safe_queue.h"
 #include "poller.h"
@@ -42,7 +41,6 @@ namespace quark
 
     private:
         /* data */
-        //struct io_uring m_ring;
         SelectPoller poller;
         std::unordered_map<uint64_t, Channel *> m_channels;
         std::unordered_map<int, Channel *> m_SocketToChannels;
