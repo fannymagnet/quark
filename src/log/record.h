@@ -1,20 +1,30 @@
 #pragma once
 
-#include <ctime>
+#if defined(_WIN32) || defined(_WIN64)
+#include <source_location>
+#else
 #include <experimental/source_location>
+#endif
+
+#include <ctime>
 #include <string>
 #include <thread>
 
 #include "filter.h"
 namespace quark
 {
+#if defined(_WIN32) || defined(_WIN64)
+typedef std::source_location source_locatetion;
+#else
+typedef std::experimental::source_location source_locatetion;
+#endif
   class Record
   {
   public:
     Record(LogLevel level,
            std::string message,
-           const std::experimental::source_location &location =
-               std::experimental::source_location::current())
+           const source_locatetion &location =
+               source_locatetion::current())
         : m_level(level),
           m_message(std::move(message)),
           m_tid(std::this_thread::get_id())

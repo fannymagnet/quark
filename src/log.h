@@ -4,7 +4,7 @@
 #include "log/file.h"
 #include "log/record.h"
 
-#include <experimental/source_location>
+//#include <experimental/source_location>
 #include <string>
 #include <iostream>
 
@@ -35,7 +35,7 @@ namespace quark
     f.write(s.c_str(), s.size());
   }
 */
-#define LOCATION std::experimental::source_location::current()
+#define LOCATION source_location::current()
 
   template <typename T>
   static void Log(T arg)
@@ -50,8 +50,8 @@ namespace quark
     Log(arg_left...);
   }
 
-  static void Debug(std::string log, const std::experimental::source_location &location =
-                                  std::experimental::source_location::current())
+  static void Debug(std::string log, const source_location &location =
+                                  source_location::current())
   {
     Record r(debug, log, location);
     std::cout << r.format();
@@ -59,7 +59,7 @@ namespace quark
   }
 
   template <typename... Ts>
-  static void Debug(const std::experimental::source_location &location, std::string log, Ts... args)
+  static void Debug(const source_location &location, std::string log, Ts... args)
   {
     Record r(debug, log, location);
     std::cout << r.format();

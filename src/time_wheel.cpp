@@ -23,6 +23,8 @@ namespace quark
             dist >>= 6;
             ++wheel_index;
         }
+
+        return true;
     }
 
     void TimerWheel::Update()

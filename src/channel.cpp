@@ -1,11 +1,11 @@
+#if defined(_WIN32) || defined(_WIN64)
+#else
 #include <fcntl.h>
 #include <unistd.h>
+#endif
 
 #include "channel.h"
 #include "log.h"
-//#include "easylogging++.h"
-//using namespace el::base::debug;
-//using namespace el::base::type;
 
 namespace quark
 {
@@ -13,8 +13,11 @@ namespace quark
     {
         m_rawfd = fd;
 
+#if defined(WIN32) || defined(WIN64)
+#else
         int flags = fcntl(fd, F_GETFL, 0);
         fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+#endif
 
         m_state.size = 0;
         m_state.type = EventIdle;
@@ -93,17 +96,19 @@ namespace quark
 
     void Channel::Send()
     {
-        uint32_t nv = 0;
         auto& vec = get_write_vecs();
-        auto bytes = writev(GetSocket(), vec.Data(), vec.BufCount());
-        GetWriteBuffer().erase(bytes);
+        auto bytes = WriteVec(GetSocket(), vec.Data(), vec.BufCount());
+        if (bytes > 0)
+        {
+            vec.Pop(bytes);
+            GetWriteBuffer().erase(bytes);
+        }
     }
 
     int Channel::Recieve()
     {
-        uint32_t nv = 0;
         auto& vec = get_read_vecs();
-        auto bytes = readv(GetSocket(), vec.Data(), vec.BufCount());
+        auto bytes = ReadVec(GetSocket(), vec.Data(), vec.BufCount());
         if (bytes > 0)
         {
             GetReadBuffer().add(bytes);

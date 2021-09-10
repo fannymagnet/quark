@@ -4,12 +4,18 @@
 
 namespace quark
 {
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32) || defined(_WIN64)
     class WinFdSet : NonCopyable
     {
     public:
-        WinFdSet(/* args */);
-        ~WinFdSet();
+        WinFdSet(/* args */)
+        {
+            Reset();
+        }
+        ~WinFdSet()
+        {
+            Reset();
+        }
 
         void Reset()
         {
@@ -27,12 +33,12 @@ namespace quark
             return FD_ISSET(fd, &fd_set_) != 0;
         }
 
-        void IsSet(socket_type fd)
+        void Clear(socket_type fd)
         {
             FD_CLR(fd, &fd_set_);
         }
 
-        fd_set* Raw()
+        fd_set *Raw()
         {
             return &fd_set_;
         }
@@ -40,15 +46,5 @@ namespace quark
     private:
         fd_set fd_set_;
     };
-
-    WinFdSet::WinFdSet(/* args */)
-    {
-        Reset();
-    }
-
-    WinFdSet::~WinFdSet()
-    {
-        Reset();
-    }
 #endif
 } // namespace quark

@@ -4,14 +4,14 @@
 #include <limits>
 #include <string.h>
 
-#include <sys/uio.h>
-
 namespace quark
 {
+	#if !defined(_WIN32) && !defined(_WIN64) 
 	uint32_t min(uint32_t a, uint32_t b)
 	{
 		return a > b ? b : a;
 	}
+	#endif
 
 	RingBuffer::RingBuffer() : in(0), out(0)
 	{

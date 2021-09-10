@@ -1,6 +1,7 @@
 #pragma once
 
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32) || defined(_WIN64)
+
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
@@ -12,6 +13,7 @@ namespace quark
 }
 
 #else
+
 #include <unistd.h>
 #include <sys/select.h>
 #include <sys/uio.h>
