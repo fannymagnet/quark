@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <sys/utsname.h>
 
 #include <arpa/inet.h>
@@ -10,13 +11,14 @@
 #include <memory>
 #include <cstring>
 
-#include "liburing.h"
+//#include "liburing.h"
 //#include "easylogging++.h"
 
 namespace quark
 {
     //INITIALIZE_EASYLOGGINGPP
 
+    /*
     CoTask<int> CounterTimes(int a, int b, int c)
     {
         int sum = 0;
@@ -30,10 +32,12 @@ namespace quark
         }
         co_return sum;
     }
+*/
+
     int Add(int a, int b)
     {
-        auto co = CounterTimes(a, b, 5);
-        std::cout << " coroutine return value = " << co.GetValue().value_or(-1) << std::endl;
+        //auto co = CounterTimes(a, b, 5);
+        //std::cout << " coroutine return value = " << co.GetValue().value_or(-1) << std::endl;
         return a + b;
     }
 
@@ -78,6 +82,7 @@ namespace quark
         "IORING_OP_MKDIRAT",
     };
 
+/*
     int check_io_uring_function()
     {
         struct utsname u;
@@ -96,6 +101,7 @@ namespace quark
         free(probe);
         return 0;
     }
+    */
 
     int setup_listening_socket(io_context *ctx, int port)
     {
@@ -104,12 +110,28 @@ namespace quark
 
         sock = socket(PF_INET, SOCK_STREAM, 0);
         if (sock == -1)
+        {
+            return -1;
+        }
         //LOG(ERROR) << "socket()";
 
         {
             int enable = 1;
             if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+            {
                 std::cout << "setsockopt(SO_REUSEADDR)" << std::endl;
+                return -1;
+            }
+        }
+        {
+            int on = 1;
+            int rc = ioctl(sock, FIONBIO, (char *)&on);
+            if (rc < 0)
+            {
+                perror("ioctl() failed");
+                close(sock);
+                exit(-1);
+            }
         }
 
         //LOG(ERROR) << "setsockopt(SO_REUSEADDR)";
@@ -122,19 +144,28 @@ namespace quark
         /* We bind to a port and turn this socket into a listening
      * socket.
      * */
-        if (bind(sock,
+        int bind_result = bind(sock,
                  (const struct sockaddr *)&srv_addr,
-                 sizeof(srv_addr)) < 0)
-            //LOG(ERROR) << "bind()";
+                 sizeof(srv_addr));
+        if (bind_result< 0)
+        {
 
-            if (listen(sock, 10) < 0)
-                //LOG(ERROR) << "listen()";
+            std::cout << "bind() => " << bind_result << std::endl;
+            return -1;
+        }
 
-                if (nullptr == ctx)
-                {
-                    //LOG(ERROR) << "io context is nullptr";
-                    exit(1);
-                }
+        if (listen(sock, 10) < 0)
+        {
+            std::cout << "listen()" << std::endl;
+            return -1;
+        }
+        //LOG(ERROR) << "listen()";
+
+        if (nullptr == ctx)
+        {
+            //LOG(ERROR) << "io context is nullptr";
+            exit(1);
+        }
 
         ctx->add_accept(sock);
 

@@ -4,14 +4,14 @@
 #include <limits>
 #include <string.h>
 
-#include <sys/uio.h>
-
 namespace quark
 {
+	#if !defined(_WIN32) && !defined(_WIN64) 
 	uint32_t min(uint32_t a, uint32_t b)
 	{
 		return a > b ? b : a;
 	}
+	#endif
 
 	RingBuffer::RingBuffer() : in(0), out(0)
 	{
@@ -88,23 +88,19 @@ namespace quark
 		return len;
 	}
 
-	void RingBuffer::get_writeable_buffer(struct iovec *vec, uint32_t &nv)
+	void RingBuffer::get_writeable_buffer(MultiIoBuf& buf)
 	{
-		assert(nv == 2);
+		//assert(nv == 2);
 		// 到缓冲区尾部
 		auto size = writeable_bytes();
 		auto l = buffer_size - (in & mask);
 		auto len = min(l, size);
-		vec[0].iov_base = (buffer + (in & mask));
-		vec[0].iov_len = len;
-		nv = 1;
+		buf.Push((buffer + (in & mask)), len);
 
 		auto left = writeable_bytes() - len;
 		if (left > 0)
 		{
-			vec[1].iov_base = buffer;
-			vec[1].iov_len = left;
-			nv = 2;
+			buf.Push(buffer, left);
 		}
 
 		/*
@@ -115,23 +111,18 @@ namespace quark
 	*/
 	}
 
-	void RingBuffer::get_readable_buffer(struct iovec *vec, uint32_t &nv)
+	void RingBuffer::get_readable_buffer(MultiIoBuf& buf)
 	{
-		assert(nv == 2);
 		auto size = readable_bytes();
 		// 到缓冲区尾部
 		auto len = buffer_size - (out & mask);
 		len = min(len, size);
-		vec[0].iov_base = (buffer + (out & mask));
-		vec[0].iov_len = len;
-		nv = 1;
+		buf.Push((buffer + (out & mask)), len);
 
 		auto left = size - len;
 		if (left > 0)
 		{
-			vec[1].iov_base = buffer;
-			vec[1].iov_len = left;
-			nv = 2;
+			buf.Push(buffer, left);
 		}
 
 		/*

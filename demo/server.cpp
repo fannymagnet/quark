@@ -1,10 +1,5 @@
 #include <iostream>
 #include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 
 #include "quark.h"
 
@@ -19,6 +14,11 @@ int main(){
     }
 
     int serv_socket = quark::setup_listening_socket(ctx, 8888);
+    if (serv_socket < 0)
+    {
+        exit(1);
+    }
+    cout << "server_socket begin listen: " << serv_socket << endl;
     try 
     {
         ctx->run();
