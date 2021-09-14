@@ -5,7 +5,7 @@
 
 #include "ringbuffer.h"
 #include "platforms/platform.h"
-
+#include "poller.h"
 
 namespace quark
 {
@@ -36,9 +36,12 @@ namespace quark
         uint16_t CurrentEvent();  
         void SetEvent(uint16_t t);
         void RemoveEvent(uint16_t t);
+        void SetPoller(Poller* poller);
 
         inline RingBuffer &GetWriteBuffer() { return write_buff_; }
         inline RingBuffer &GetReadBuffer() { return read_buff_; }
+
+        void Write(uint8_t* data, uint32_t len);
 
         void Send();
         int Recieve();
@@ -73,6 +76,8 @@ namespace quark
 
         MultiIoBuf read_vecs;
         MultiIoBuf write_vecs;
+
+        Poller* poller_;
     };
 
 }

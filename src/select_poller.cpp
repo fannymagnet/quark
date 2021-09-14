@@ -42,6 +42,7 @@ namespace quark
         std::function<void()> handle = nullptr;
         while (tasks_.try_pop(handle))
         {
+            //Debug("Poller Run Task");
             handle();
         }
 
@@ -125,7 +126,9 @@ namespace quark
         auto iter = std::find(channels_.begin(), channels_.end(), ch);
         if (iter == channels_.end())
         {
+            Debug(LOCATION, "DirectAddChannle => ", ch->GetSocket());
             channels_.emplace_back(ch);
+            ch->SetPoller(this);
         }
     }
     void SelectPoller::DirectRemoveChannle(Channel *ch)
@@ -134,6 +137,8 @@ namespace quark
         if (iter != channels_.end())
         {
             channels_.erase(iter);
+            ch->SetPoller(nullptr);
+            Debug(LOCATION, "DirectRemoveChannle => ", ch->GetSocket());
         }
     }
 }

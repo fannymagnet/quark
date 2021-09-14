@@ -23,11 +23,11 @@ namespace quark
     typedef PosixFdSet FdSetAdapter;
     typedef PosixIoBuf MultiIoBuf;
 
-    static uint32_t WriteVec(socket_type fd, buf_type* buf, int buf_size) {
+    static u_int32_t WriteVec(socket_type fd, buf_type* buf, int buf_size) {
         return writev(fd, buf, buf_size);
     }
 
-    static uint32_t ReadVec(socket_type fd, buf_type* buf, int buf_size) {
+    static u_int32_t ReadVec(socket_type fd, buf_type* buf, int buf_size) {
         return readv(fd, buf, buf_size);
     }
 #endif

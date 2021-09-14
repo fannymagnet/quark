@@ -96,7 +96,11 @@ namespace quark
 
     void Channel::Send()
     {
-        auto& vec = get_write_vecs();
+        if (WaitingSendBytes() == 0)
+        {
+            return;
+        }
+        auto &vec = get_write_vecs();
         auto bytes = WriteVec(GetSocket(), vec.Data(), vec.BufCount());
         if (bytes > 0)
         {
@@ -107,7 +111,7 @@ namespace quark
 
     int Channel::Recieve()
     {
-        auto& vec = get_read_vecs();
+        auto &vec = get_read_vecs();
         auto bytes = ReadVec(GetSocket(), vec.Data(), vec.BufCount());
         if (bytes > 0)
         {
@@ -116,17 +120,71 @@ namespace quark
         return bytes;
     }
 
-    MultiIoBuf& Channel::get_write_vecs()
+    MultiIoBuf &Channel::get_write_vecs()
     {
         write_vecs.Clear();
         write_buff_.get_readable_buffer(write_vecs);
         return write_vecs;
     }
 
-    MultiIoBuf& Channel::get_read_vecs()
+    MultiIoBuf &Channel::get_read_vecs()
     {
         read_vecs.Clear();
         read_buff_.get_writeable_buffer(read_vecs);
         return read_vecs;
+    }
+
+    void Channel::SetPoller(Poller *poller)
+    {
+        poller_ = poller;
+    }
+
+    void Channel::Write(uint8_t *data, uint32_t len)
+    {
+        if (nullptr == poller_)
+        {
+            Debug("channle not in poller");
+            return;
+        }
+        /// TODO: FIX THIS DIRTY CODE
+        auto func = [this, data, len]()
+        {
+            if (WaitingSendBytes() > 0)
+            {
+                uint32_t to_be_sent = len;
+                while (to_be_sent > 0)
+                {
+                    uint32_t max_bytes = this->write_buff_.writeable_bytes();
+                    auto bytes = this->write_buff_.put(data, max_bytes >= len ? len : max_bytes);
+                    to_be_sent = bytes < to_be_sent ? to_be_sent - bytes : 0;
+                    this->Send();
+                }
+                if (WaitingSendBytes() > 0)
+                {
+                    SetEvent(EventWrite);
+                }
+            }
+            else
+            {
+                auto bytes = write(GetSocket(), data, len);
+                if (bytes < len)
+                {
+                    uint32_t to_be_sent = len - bytes;
+                    while (to_be_sent > 0)
+                    {
+                        uint32_t max_bytes = this->write_buff_.writeable_bytes();
+                        auto bytes = this->write_buff_.put(data, max_bytes >= len ? len : max_bytes);
+                        to_be_sent = bytes < to_be_sent ? to_be_sent - bytes : 0;
+                        if (to_be_sent > 0)
+                            this->Send();
+                    }
+                    if (WaitingSendBytes() > 0)
+                    {
+                        SetEvent(EventWrite);
+                    }
+                }
+            }
+        };
+        poller_->RunInPoller(func);
     }
 } // namespace quark

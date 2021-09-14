@@ -14,17 +14,17 @@
 namespace quark
 {
 #if defined(_WIN32) || defined(_WIN64)
-typedef std::source_location source_locatetion;
+typedef std::source_location source_location;
 #else
-typedef std::experimental::source_location source_locatetion;
+typedef std::experimental::source_location source_location;
 #endif
   class Record
   {
   public:
     Record(LogLevel level,
            std::string message,
-           const source_locatetion &location =
-               source_locatetion::current())
+           const source_location &location =
+               source_location::current())
         : m_level(level),
           m_message(std::move(message)),
           m_tid(std::this_thread::get_id())

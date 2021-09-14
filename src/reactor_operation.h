@@ -6,7 +6,7 @@ namespace quark
     class ReactorOperation : public Operation
     {
     public:
-        typedef std::functional<void(ReactorOperation *)> PerformFunc;
+        typedef std::function<void(ReactorOperation *)> PerformFunc;
         enum Status
         {
             NotDone,

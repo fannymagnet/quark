@@ -77,13 +77,8 @@ namespace quark
                 // echo
                 if (ch->CanRead())
                 {
-                    while (ch->WaitingSendBytes() > 0)
-                    {
-                        // send data
-                        ch->Send();
-                    }
                     auto count = ch->GetReadBuffer().get(buf, 1024);
-                    ch->GetWriteBuffer().put(buf, count);
+                    ch->Write(buf, count);
                 }
 
                 if (ch->WaitingSendBytes() <= 0)
