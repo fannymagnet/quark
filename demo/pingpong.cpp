@@ -75,7 +75,7 @@ int main() {
                 #if defined(_WIN32) || defined(_WIN64)
                         send(sock, send_buffer, sizeof(send_buffer)-1, 0);
                 #else
-                        write(sock, send_buffer.c_str(), send_buffer.size());
+                        write(sock, send_buffer, sizeof(send_buffer)-1);
                 #endif
                 ++s.in;
                 //cout << sock << " write finished, begin read --" << endl;

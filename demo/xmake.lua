@@ -10,7 +10,9 @@ target("client")
     set_kind("binary")
     add_files("client.cpp")
     add_deps("quark-base")
-    --add_links("pthread")
+    if is_plat("linux") then
+        add_links("pthread")
+    end
     add_includedirs("$(projectdir)/src")
 
 target("server")
@@ -24,5 +26,7 @@ target("pingpong")
     set_kind("binary")
     add_files("pingpong.cpp")
     add_deps("quark-base")
-    --add_links("pthread")
+    if is_plat("linux") then
+        add_links("pthread")
+    end
     add_includedirs("$(projectdir)/src")
