@@ -101,7 +101,7 @@ namespace quark
             return;
         }
         auto &vec = get_write_vecs();
-        auto bytes = WriteVec(GetSocket(), vec.Data(), vec.BufCount());
+        auto bytes = WriteVec(GetSocket(), vec);
         if (bytes > 0)
         {
             vec.Pop(bytes);
@@ -112,7 +112,7 @@ namespace quark
     int Channel::Recieve()
     {
         auto &vec = get_read_vecs();
-        auto bytes = ReadVec(GetSocket(), vec.Data(), vec.BufCount());
+        auto bytes = ReadVec(GetSocket(), vec);
         if (bytes > 0)
         {
             GetReadBuffer().add(bytes);

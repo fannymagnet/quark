@@ -18,11 +18,44 @@ namespace quark
 
         bool Push(void *p, size_t len)
         {
+            WSABUF buf;
+            buf.buf = (char *)p;
+            buf.len = len;
+            count_ += len;
+            io_vecs_.emplace_back(buf);
             return false;
         }
 
         bool Pop(size_t bytes)
         {
+            if (count_ < bytes)
+            {
+                return false;
+            }
+
+            count_ -= bytes;
+            if (count_ == 0)
+            {
+                io_vecs_.clear();
+                return true;
+            }
+
+            while (bytes > 0 && io_vecs_.size() > 0)
+            {
+                if (bytes >= io_vecs_[0].len)
+                {
+                    bytes -= io_vecs_[0].len;
+                    io_vecs_.erase(io_vecs_.begin());
+                    continue;
+                }
+                else 
+                {
+                    io_vecs_[0].len -= bytes;
+                    io_vecs_[0].buf = io_vecs_[0].buf + bytes;
+                    bytes = 0;
+                }
+            }
+
             return false;
         }
 

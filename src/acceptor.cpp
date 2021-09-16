@@ -26,6 +26,14 @@ namespace quark
 
     bool Acceptor::Open(int port)
     {
+#if defined(_WIN32) || defined(_WIN64)
+    WORD sockVersion = MAKEWORD(2,2);
+    WSADATA wsaData;
+    if (0 != WSAStartup(sockVersion, &wsaData))
+    {
+        return false;
+    }
+#endif
         sock_ = socket(PF_INET, SOCK_STREAM, 0);
         if (sock_ == -1)
         {
@@ -101,6 +109,7 @@ namespace quark
         {
 #if defined(_WIN32) || defined(_WIN64)
             closesocket(sock_);
+            WSACleanup();
 #else
             close(sock_);
 #endif

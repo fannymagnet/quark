@@ -44,6 +44,14 @@ int main()
 {
     constexpr int buf_size = 256;
 
+#if defined(_WIN32) || defined(_WIN64)
+    WORD sockVersion = MAKEWORD(2,2);
+    WSADATA wsaData;
+    if (0 != WSAStartup(sockVersion, &wsaData))
+    {
+        return false;
+    }
+#endif
     int sock = TcpConnect("127.0.0.1", 8888);
     if (sock <= 0)
     {
@@ -84,7 +92,12 @@ int main()
     }
 
     //关闭套接字
+#if defined(_WIN32) || defined(_WIN64)
+    closesocket(sock);
+    WSACleanup();
+#else
     close(sock);
+#endif
 
     return 0;
 }

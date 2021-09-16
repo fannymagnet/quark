@@ -9,7 +9,7 @@
 namespace quark
 {
     typedef SOCKET socket_type;
-    typedef WSADATA buf_type;
+    typedef WSABUF buf_type;
 }
 
 #else
