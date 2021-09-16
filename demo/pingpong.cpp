@@ -140,7 +140,9 @@ int main()
 
     cout << "in:" << sum_counter.in / 10 << endl;
     cout << "out:" << sum_counter.out / 10 << endl;
+#if defined(_WIN32) || defined(_WIN64)
     WSACleanup();
+#endif
 
     return 0;
 }

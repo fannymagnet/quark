@@ -34,7 +34,7 @@ namespace quark
     }
 
     static u_int32_t ReadVec(socket_type fd, MultiIoBuf& io_buf) {
-        return readv(fd, io_buf.Data(), io_buf.Count());
+        return readv(fd, io_buf.Data(), io_buf.BufCount());
     }
 #endif
     //typedef int socket_type;
