@@ -166,7 +166,14 @@ namespace quark
             }
             else
             {
-                auto bytes = write(GetSocket(), data, len);
+                auto bytes = 0; //write(GetSocket(), data, len);
+                #if defined(_WIN32) || defined(_WIN64)
+                        //send(sock, send_buffer, sizeof(send_buffer)-1, 0);
+                    bytes = send(GetSocket(), (const char*)data, len, 0);
+                #else
+                    //write(sock, send_buffer.c_str(), send_buffer.size());
+                    bytes = write(GetSocket(), data, len);
+                #endif
                 if (bytes < len)
                 {
                     uint32_t to_be_sent = len - bytes;

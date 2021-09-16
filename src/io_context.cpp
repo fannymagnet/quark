@@ -70,8 +70,12 @@ namespace quark
                     else if (bytes == 0)
                     {
                         poller.RemoveChannel(ch);
-                        Debug(LOCATION, "INFO: socket: " , ch->GetSocket() , " disconnected!" );
+                        Debug(LOCATION, "INFO: socket: ", ch->GetSocket(), " disconnected!");
+#if defined(_WIN32) || defined(_WIN64)
+                        closesocket(ch->GetSocket());
+#else
                         ::close(ch->GetSocket());
+#endif
                     }
                 }
                 // echo

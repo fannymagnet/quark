@@ -5,10 +5,17 @@
 #include <chrono>
 
 #include <string.h>
+#if defined(_WIN32) || defined(_WIN64)
+
+#include <winsock2.h>  
+#pragma comment(lib,"ws2_32.lib")  
+
+#else
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <sys/types.h> /* See NOTES */
+#include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#endif
 
 using namespace std;
 
@@ -35,7 +42,7 @@ int TcpConnect(string ipv4, int port)
 
 int main()
 {
-    int buf_size = 256;
+    constexpr int buf_size = 256;
 
     int sock = TcpConnect("127.0.0.1", 8888);
     if (sock <= 0)
@@ -52,13 +59,22 @@ int main()
     {
         std::string send_buffer;
         cin >> send_buffer;
+#if defined(_WIN32) || defined(_WIN64)
+        send(sock, send_buffer.c_str(), send_buffer.size(), 0);
+#else
         write(sock, send_buffer.c_str(), send_buffer.size());
+#endif
         cout << sock << " write " << send_buffer << " finished, begin read --" << endl;
 
         //读取服务器传回的数据
         char buffer[buf_size];
         memset(buffer, 0, sizeof(buffer));
-        int nbytes = read(sock, buffer, sizeof(buffer) - 1);
+        int nbytes = 0;
+#if defined(_WIN32) || defined(_WIN64)
+        nbytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+#else
+        nbytes = read(sock, buffer, sizeof(buffer) - 1);
+#endif
         if (nbytes == 0)
         {
             cout << "Message form server: " << sock << " bytes: " << nbytes << " disconnected" << endl;

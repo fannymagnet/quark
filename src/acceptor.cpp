@@ -53,9 +53,16 @@ namespace quark
         /* We bind to a port and turn this socket into a listening
         * socket.
         * */
-        int bind_result = bind(sock_,
+        int bind_result = 0;
+#if defined(_WIN32) || defined(_WIN64)
+        bind_result = bind(sock_,
+                               (const struct sockaddr *)&srv_addr,
+                               (int)sizeof(srv_addr));
+#else
+        bind_result = bind(sock_,
                                (const struct sockaddr *)&srv_addr,
                                sizeof(srv_addr));
+#endif
         if (bind_result < 0)
         {
 
@@ -92,7 +99,11 @@ namespace quark
     {
         if (sock_ > 0)
         {
+#if defined(_WIN32) || defined(_WIN64)
+            closesocket(sock_);
+#else
             close(sock_);
+#endif
             sock_ = 0;
         }
     }
@@ -100,7 +111,12 @@ namespace quark
     bool Acceptor::SetNonBlock(bool open)
     {
         int on = open ? 1 : 0;
-        int rc = ioctl(sock_, FIONBIO, (char *)&on);
+        int rc = 0;
+        #if defined(_WIN32) || defined(_WIN64)
+        rc = ioctlsocket(sock_, FIONBIO, (unsigned long *)&on);
+        #else
+        rc = ioctl(sock_, FIONBIO, (char *)&on);
+        #endif
         if (rc < 0)
         {
             Debug("ioctl() failed");
@@ -113,7 +129,11 @@ namespace quark
     bool Acceptor::SetReUse(bool open)
     {
         int enable = open ? 1 : 0;
+        #if defined(_WIN32) || defined(_WIN64)
+        if (setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, (const char *)&enable, sizeof(int)) < 0)
+        #else
         if (setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+        #endif
         {
             return false;
         }

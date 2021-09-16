@@ -1,17 +1,16 @@
 #include "ringbuffer.h"
-//#include "easylogging++.h"
 #include <assert.h>
 #include <limits>
 #include <string.h>
 
 namespace quark
 {
-	#if !defined(_WIN32) && !defined(_WIN64) 
+#if !defined(_WIN32) && !defined(_WIN64)
 	uint32_t min(uint32_t a, uint32_t b)
 	{
 		return a > b ? b : a;
 	}
-	#endif
+#endif
 
 	RingBuffer::RingBuffer() : in(0), out(0)
 	{
@@ -27,15 +26,14 @@ namespace quark
 		}
 	}
 
-	// 返回实际写入缓冲区中的数据
+	// return in buffer data len
 	uint32_t RingBuffer::put(const uint8_t *data, uint32_t len)
 	{
 		// 当前缓冲区空闲空间
 		len = min(len, writeable_bytes());
 
-		// 当前in位置到buffer末尾的长度
+		// in to end buffer size
 		auto l = min(len, buffer_size - (in & mask));
-
 		// 首先复制数据到[in，buffer的末尾]
 		memcpy(buffer + (in & mask), data, l);
 
@@ -46,8 +44,7 @@ namespace quark
 
 		return len;
 	}
-
-	// 返回实际读取的数据长度
+	// return real data return
 	uint32_t RingBuffer::get(uint8_t *data, uint32_t len)
 	{
 		// 缓冲区中的数据长度
@@ -60,38 +57,30 @@ namespace quark
 		// 从[buffer start,...]读取数据
 		memcpy(data + l, buffer, len - l);
 
-		out += len; // 直接加，不错模运算。溢出后，从buffer的起始位置重新开始
-
+		out += len;
 		return len;
 	}
 
-	// 返回实际写入的数据长度
 	uint32_t RingBuffer::add(uint32_t len)
 	{
-		// 缓冲区中的数据长度
 		len = min(len, writeable_bytes());
-		in += len; // 直接加，不错模运算。溢出后，从buffer的起始位置重新开始
-		// //LOG(INFO) << "==== "
-		// 		  << "ringbuffer write : " << len << " current: " << in;
-
+		in += len;
 		return len;
 	}
-	// 返回实际擦除的数据长度
+
 	uint32_t RingBuffer::erase(uint32_t len)
 	{
-		// 缓冲区中的数据长度
+		// buffer data size
 		len = min(len, in - out);
 		out += len; // 直接加，不错模运算。溢出后，从buffer的起始位置重新开始
 
-		// //LOG(INFO) << "==== "
-		// 		  << "ringbuffer read : " << len << " current: " << out;
 		return len;
 	}
 
-	void RingBuffer::get_writeable_buffer(MultiIoBuf& buf)
+	void RingBuffer::get_writeable_buffer(MultiIoBuf &buf)
 	{
 		//assert(nv == 2);
-		// 到缓冲区尾部
+		// add to end of buffer
 		auto size = writeable_bytes();
 		auto l = buffer_size - (in & mask);
 		auto len = min(l, size);
@@ -102,19 +91,12 @@ namespace quark
 		{
 			buf.Push(buffer, left);
 		}
-
-		/*
-	//LOG(INFO) << "--- "
-			  << "ringbuffer write iovec: " << nv << " left: " << left;
-	//LOG(INFO) << "--- " << vec[0].iov_base << " : " << vec[0].iov_len;
-	//LOG(INFO) << "--- " << vec[1].iov_base << " : " << vec[1].iov_len;
-	*/
 	}
 
-	void RingBuffer::get_readable_buffer(MultiIoBuf& buf)
+	void RingBuffer::get_readable_buffer(MultiIoBuf &buf)
 	{
 		auto size = readable_bytes();
-		// 到缓冲区尾部
+		// add to end of buffer
 		auto len = buffer_size - (out & mask);
 		len = min(len, size);
 		buf.Push((buffer + (out & mask)), len);

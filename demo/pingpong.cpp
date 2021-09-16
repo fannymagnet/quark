@@ -5,10 +5,17 @@
 #include <chrono>
 
 #include <string.h>
+#if defined(_WIN32) || defined(_WIN64)
+
+#include <winsock2.h>  
+#pragma comment(lib,"ws2_32.lib")  
+
+#else
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#endif
 
 using namespace std;
 
@@ -38,7 +45,7 @@ struct Sum {
 
 int main() {
     int thread_count = 6;
-    int buf_size = 128;
+    constexpr int buf_size = 128;
     vector<Sum> results;
     for (int i = 0; i < thread_count; ++i)
     {
@@ -65,14 +72,23 @@ int main() {
                 }
                 char send_buffer[buf_size];
                 memset(send_buffer, 1, sizeof(send_buffer));
-                write(sock, send_buffer, sizeof(send_buffer)-1);
+                #if defined(_WIN32) || defined(_WIN64)
+                        send(sock, send_buffer, sizeof(send_buffer)-1, 0);
+                #else
+                        write(sock, send_buffer.c_str(), send_buffer.size());
+                #endif
                 ++s.in;
                 //cout << sock << " write finished, begin read --" << endl;
 
                 //读取服务器传回的数据
                 char buffer[buf_size];
                 memset(buffer, 0, sizeof(buffer));
-                int nbytes = read(sock, buffer, sizeof(buffer)-1);
+                int nbytes = 0;
+                #if defined(_WIN32) || defined(_WIN64)
+                        nbytes = recv(sock, buffer, sizeof(buffer)-1, 0);
+                #else
+                        nbytes = read(sock, buffer, sizeof(buffer)-1);
+                #endif
                 if (nbytes == 0) {
                     cout << "Message form server: " << sock << " bytes: " << nbytes << " disconnected" << endl;
                     break;

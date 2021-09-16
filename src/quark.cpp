@@ -2,14 +2,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <memory>
+#include <cstring>
+
+#if defined(_WIN32) || defined(_WIN64)
+#else
 #include <sys/ioctl.h>
 #include <sys/utsname.h>
-
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <memory>
-#include <cstring>
+#endif
 
 //#include "liburing.h"
 //#include "easylogging++.h"
@@ -103,6 +106,7 @@ namespace quark
     }
     */
 
+#if !defined(_WIN32) || !defined(_WIN64)
     int setup_connect_socket(io_context *ctx, char *addr, int port)
     {
         int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -128,4 +132,5 @@ namespace quark
 
         return sock;
     }
+#endif
 }
