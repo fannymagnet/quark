@@ -68,7 +68,7 @@ int main()
         std::string send_buffer;
         cin >> send_buffer;
 #if defined(_WIN32) || defined(_WIN64)
-        send(sock, send_buffer.c_str(), send_buffer.size(), 0);
+        send(sock, send_buffer.c_str(), send_buffer.size(), MSG_PEEK);
 #else
         write(sock, send_buffer.c_str(), send_buffer.size());
 #endif
@@ -79,9 +79,9 @@ int main()
         memset(buffer, 0, sizeof(buffer));
         int nbytes = 0;
 #if defined(_WIN32) || defined(_WIN64)
-        nbytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+        nbytes = recv(sock, buffer, buf_size - 1, MSG_PEEK);
 #else
-        nbytes = read(sock, buffer, sizeof(buffer) - 1);
+        nbytes = read(sock, buffer, buf_size - 1);
 #endif
         if (nbytes == 0)
         {
