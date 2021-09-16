@@ -19,10 +19,8 @@ namespace quark
     }
 
     static uint32_t ReadVec(socket_type fd, MultiIoBuf& io_buf) {
-        WSABUF buf;
         DWORD read_bytes = 0;
-        WSARecv(fd, &buf, 1, &read_bytes, 0, nullptr, nullptr);
-        io_buf.Push(buf.buf, read_bytes);
+        WSARecv(fd, io_buf.Data(), io_buf.BufCount(), &read_bytes, 0, nullptr, nullptr);
         return read_bytes;
     }
 #else
