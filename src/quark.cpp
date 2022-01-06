@@ -107,7 +107,7 @@ namespace quark
     */
 
 #if !defined(_WIN32) || !defined(_WIN64)
-    int setup_connect_socket(io_context *ctx, char *addr, int port)
+    int setup_connect_socket(IoContext *ctx, char *addr, int port)
     {
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         if (-1 == sock)

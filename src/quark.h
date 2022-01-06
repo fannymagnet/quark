@@ -19,7 +19,7 @@ extern "C" {
     extern int Add(int a, int b);
     //int check_io_uring_function();
 #if !defined(_WIN32) || !defined(_WIN64)
-    int setup_connect_socket(io_context *ctx, char *addr, int port);
+    int setup_connect_socket(IoContext *ctx, char *addr, int port);
 #endif
 
     /*

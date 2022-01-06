@@ -40,17 +40,11 @@ int TcpConnect(string ipv4, int port)
     return sock;
 }
 
-struct Sum
-{
-    int64_t in = 0;
-    int64_t out = 0;
-};
-
 int main()
 {
 
 #if defined(_WIN32) || defined(_WIN64)
-    WORD sockVersion = MAKEWORD(2,2);
+    WORD sockVersion = MAKEWORD(2, 2);
     WSADATA wsaData;
     if (0 != WSAStartup(sockVersion, &wsaData))
     {
@@ -59,70 +53,59 @@ int main()
 #endif
     int thread_count = 6;
     constexpr int buf_size = 128;
-    vector<Sum> results;
-    for (int i = 0; i < thread_count; ++i)
-    {
-        results.push_back(Sum());
-    }
 
     vector<thread> ts;
     for (int i = 0; i < thread_count; ++i)
     {
 
-        thread t([i, &results, buf_size]()
+        thread t([i, buf_size]()
                  {
-                     Sum s;
-                     int sock = TcpConnect("127.0.0.1", 8888);
-                     std::chrono::milliseconds ms{10000};
+                    int sock = TcpConnect("127.0.0.1", 8888);
+                    if (sock != -1)
+                    {
+                        cout << "socket: " << sock << " begin send!" << endl;
+                    }
+                    else 
+                    {
+                        cout << "socket: connect error!" << endl;
+                        return;
+                    }
 
-                     auto begin = chrono::steady_clock::now();
-                     cout << " socket: " << sock << " begin send!" << endl;
-
-                     while (true)
-                     {
-                         auto end = chrono::steady_clock::now();
-                         if ((end - begin) > ms)
-                         {
-                             cout << " socket: " << sock << " finiesh send!" << endl;
-                             break;
-                         }
-                         char send_buffer[buf_size];
-                         memset(send_buffer, 1, sizeof(send_buffer));
+                    int msg_count = 0;
+                    while (++msg_count > 10000)
+                    {
+                       char send_buffer[buf_size];
+                       memset(send_buffer, 1, sizeof(send_buffer));
 #if defined(_WIN32) || defined(_WIN64)
-                         send(sock, send_buffer, sizeof(send_buffer) - 1, 0);
+                        send(sock, send_buffer, sizeof(send_buffer) - 1, 0);
 #else
-                         write(sock, send_buffer, sizeof(send_buffer) - 1);
+                        write(sock, send_buffer, sizeof(send_buffer) - 1);
 #endif
-                         ++s.in;
-                         //cout << sock << " write finished, begin read --" << endl;
+                        cout << sock << " write finished, begin read --" << endl;
 
-                         //读取服务器传回的数据
-                         char buffer[buf_size];
-                         memset(buffer, 0, sizeof(buffer));
-                         int nbytes = 0;
+                        //读取服务器传回的数据
+                        char buffer[buf_size];
+                        memset(buffer, 0, sizeof(buffer));
+                        int nbytes = 0;
 #if defined(_WIN32) || defined(_WIN64)
-                         nbytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+                        nbytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
 #else
-                         nbytes = read(sock, buffer, sizeof(buffer) - 1);
+                        nbytes = read(sock, buffer, sizeof(buffer) - 1);
 #endif
-                         if (nbytes == 0)
-                         {
-                             cout << "Message form server: " << sock << " bytes: " << nbytes << " disconnected" << endl;
-                             break;
-                         }
-                         //cout << sock << " read finished " << nbytes <<", begin next --" << endl;
-                         ++s.out;
+                        if (nbytes == 0)
+                        {
+                            cout << "Message form server: " << sock << " bytes: " << nbytes << " disconnected" << endl;
+                            break;
+                        }
+                        cout << sock << " read finished " << nbytes << ", begin next --" << endl;
                      }
-
-                     results[i] = s;
-                     cout << sock << " begin setting result: " << s.in << " : " << s.out << endl;
             //关闭套接字
 #if defined(_WIN32) || defined(_WIN64)
-                     closesocket(sock);
+                    closesocket(sock);
 #else
-                     close(sock);
+                    close(sock);
 #endif
-                 });
+                });
         ts.emplace_back(std::move(t));
     }
 
@@ -131,15 +114,10 @@ int main()
         ts[i].join();
     }
 
-    Sum sum_counter;
-    for (int i = 0; i < results.size(); ++i)
+    while (true)
     {
-        sum_counter.in += results[i].in;
-        sum_counter.out += results[i].out;
+        sleep(1000);
     }
-
-    cout << "in:" << sum_counter.in / 10 << endl;
-    cout << "out:" << sum_counter.out / 10 << endl;
 #if defined(_WIN32) || defined(_WIN64)
     WSACleanup();
 #endif

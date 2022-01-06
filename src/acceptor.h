@@ -13,7 +13,7 @@ namespace quark
     {
     public:
         typedef std::function<void(Channel*)> AccpetHandle;
-        Acceptor(io_context *ctx, int max_conns);
+        Acceptor(IoContext *ctx, int max_conns);
         ~Acceptor();
 
         bool Open(int port);
@@ -26,7 +26,8 @@ namespace quark
 
         socket_type GetSocket() { return sock_; }
     private:
-        io_context* ctx_;
+        IoContext* ctx_;
+        Channel* channel_;
         socket_type sock_;
         int max_conns_;
     };

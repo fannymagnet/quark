@@ -54,14 +54,13 @@ namespace quark
         {
             int fd = channels_[i]->GetSocket();
             auto ev = channels_[i]->CurrentEvent();
-            bool isListenner = channels_[i]->IsListenr();
-            if (ev & EventRead || isListenner)
+            if (ev & EventRead)
             {
                 rfds_.Set(fd);
                 //Debug("add read fd:" + std::to_string(fd));
             }
 
-            if (channels_[i]->WaitingSendBytes() > 0 && !isListenner)
+            if (ev & EventWrite)
                 wfds_.Set(fd);
 
             if (fd > max_fd)
@@ -90,13 +89,13 @@ namespace quark
                 if (rfds_.IsSet(fd))
                 {
                     event = true;
-                    ch->SetEvent(EventRead);
+                    //ch->SetEvent(EventRead);
                     rfds_.Clear(fd);
                 }
                 if (wfds_.IsSet(fd))
                 {
                     event = true;
-                    ch->SetEvent(EventWrite);
+                    //ch->SetEvent(EventWrite);
                     wfds_.Clear(fd);
                 }
                 if (event)

@@ -72,7 +72,7 @@ namespace quark
 	{
 		// buffer data size
 		len = min(len, in - out);
-		out += len; // 直接加，不错模运算。溢出后，从buffer的起始位置重新开始
+		out += len; // 直接加，不做模运算。溢出后，从buffer的起始位置重新开始
 
 		return len;
 	}

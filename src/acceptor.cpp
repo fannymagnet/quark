@@ -15,7 +15,7 @@
 
 namespace quark
 {
-    Acceptor::Acceptor(io_context *ctx, int max_conns) : ctx_(ctx), max_conns_(max_conns)
+    Acceptor::Acceptor(IoContext *ctx, int max_conns) : ctx_(ctx), max_conns_(max_conns)
     {
     }
 
@@ -42,7 +42,7 @@ namespace quark
 
         if (!SetNonBlock())
         {
-            Debug("setsockopt(SO_REUSEADDR)");
+            Debug("SetNonBlock failed!!!");
             return false;
         }
 
@@ -87,7 +87,7 @@ namespace quark
             Debug("listen()");
             return false;
         }
-        //LOG(ERROR) << "listen()";
+        Debug("listen()");
 
         if (nullptr == ctx_)
         {
@@ -95,7 +95,33 @@ namespace quark
             return false;
         }
 
-        ctx_->add_accept(sock_);
+        channel_ = new Channel(sock_);
+        channel_->SetEvent(EventRead);
+        Debug("SetEvent()");
+        auto read_handle = [&](){
+            struct sockaddr addr;
+            socklen_t addr_len;
+#if defined(_WIN32) || defined(_WIN64)
+            int ret = accept(sock_, &addr, &addr_len);
+#else
+            int ret = accept4(sock_, &addr, &addr_len, SOCK_NONBLOCK|SOCK_CLOEXEC);
+#endif
+            if (ret > 0)
+            {
+                Debug(LOCATION, "new socket: ", ret, " connected!");
+                Channel *chan = new Channel(ret);
+                ctx_->AddChannel(chan);
+            }
+            else 
+            {
+                Debug(LOCATION, "socket", sock_," accpet error: ", errno);
+            }
+        };
+        Debug("create handle()");
+        channel_->SetRead(std::move(read_handle));
+        Debug("SetRead()");
+        ctx_->AddChannel(channel_);
+        Debug("AddChannel()");
         return true;
     }
 

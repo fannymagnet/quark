@@ -24,13 +24,13 @@ namespace quark
 	class Service
 	{
 	public:
-		Service(io_context *ctx, string addr, int port) : addr_(addr), port_(port), ctx_(ctx), acceptor_(ctx_, 100) {
+		Service(IoContext *ctx, string addr, int port) : addr_(addr), port_(port), ctx_(ctx), acceptor_(ctx_, 100) {
 		}
 		~Service() {}
 
 		void handle_new_connection();
 
-		bool start()
+		bool Start()
 		{
 			if (!acceptor_.Open(port_))
 			{
@@ -44,11 +44,11 @@ namespace quark
 			cout << "server_socket begin listen: " << acceptor_.GetSocket() << endl;
 			return true;
 		}
-		void run()
+		void Run()
 		{
 			try
 			{
-                ctx_->run();
+                ctx_->Run();
 			}
 			catch (exception e)
 			{
@@ -61,7 +61,7 @@ namespace quark
 		/* data */
 		string addr_;
 		int port_;
-		io_context *ctx_;
+		IoContext *ctx_;
 		map<int, Connector> conns_;
 
 		Acceptor acceptor_;

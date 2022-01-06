@@ -11,17 +11,14 @@ namespace quark
 {
     Channel::Channel(int fd) : is_listener_(false)
     {
-        m_rawfd = fd;
+        rawfd_ = fd;
 
 #if defined(WIN32) || defined(WIN64)
 #else
         int flags = fcntl(fd, F_GETFL, 0);
         fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 #endif
-
-        m_state.size = 0;
-        m_state.type = EventIdle;
-        m_state.fd = m_rawfd;
+        event_ = EventIdle;
     }
 
     Channel::~Channel()
@@ -30,48 +27,33 @@ namespace quark
 
     void Channel::SetEvent(uint16_t t)
     {
-        //Debug(LOCATION, "socket ", m_rawfd, " set event: ", t);
+        //Debug(LOCATION, "socket ", rawfd_, " set event: ", t);
         // todo: fix this
-        if ((t & EventAccept) != 0)
-        {
-            is_listener_ = true;
-            //Debug(LOCATION, "socket ", m_rawfd, " set listener", is_listener_);
-        }
-
         if ((t & EventRead) != 0)
         {
-            m_state.type |= EventRead;
-            //Debug(LOCATION, "socket ", m_rawfd, " set read");
+            event_ |= EventRead;
+            //Debug(LOCATION, "socket ", rawfd_, " set read");
         }
 
         if ((t & EventWrite) != 0)
         {
-            m_state.type |= EventWrite;
-            //Debug(LOCATION, "socket ", m_rawfd, " set write");
+            event_ |= EventWrite;
+            //Debug(LOCATION, "socket ", rawfd_, " set write");
         }
     }
 
     void Channel::RemoveEvent(uint16_t t)
     {
-        if ((t & m_state.type) != 0)
+        if ((t & event_) != 0)
         {
-            m_state.type &= ~t;
-            //Debug(LOCATION, "socket ", m_rawfd, " set write");
+            event_ &= ~t;
+            //Debug(LOCATION, "socket ", rawfd_, " set write");
         }
     }
 
     uint16_t Channel::CurrentEvent()
     {
-        if (InBfferCapcity() > 0)
-        {
-            m_state.type |= EventRead;
-        }
-
-        if (WaitingSendBytes() > 0)
-        {
-            m_state.type |= EventWrite;
-        }
-        return m_state.type;
+        return event_;
     }
 
     bool Channel::CanRead()
@@ -100,7 +82,7 @@ namespace quark
         {
             return;
         }
-        auto &vec = get_write_vecs();
+        auto &vec = GetWriteVecs();
         auto bytes = WriteVec(GetSocket(), vec);
         if (bytes > 0)
         {
@@ -111,7 +93,7 @@ namespace quark
 
     int Channel::Recieve()
     {
-        auto &vec = get_read_vecs();
+        auto &vec = GetReadVecs();
         auto bytes = ReadVec(GetSocket(), vec);
         if (bytes > 0)
         {
@@ -120,18 +102,18 @@ namespace quark
         return bytes;
     }
 
-    MultiIoBuf &Channel::get_write_vecs()
+    MultiIoBuf &Channel::GetWriteVecs()
     {
-        write_vecs.Clear();
-        write_buff_.get_readable_buffer(write_vecs);
-        return write_vecs;
+        write_vecs_.Clear();
+        write_buff_.get_readable_buffer(write_vecs_);
+        return write_vecs_;
     }
 
-    MultiIoBuf &Channel::get_read_vecs()
+    MultiIoBuf &Channel::GetReadVecs()
     {
-        read_vecs.Clear();
-        read_buff_.get_writeable_buffer(read_vecs);
-        return read_vecs;
+        read_vecs_.Clear();
+        read_buff_.get_writeable_buffer(read_vecs_);
+        return read_vecs_;
     }
 
     void Channel::SetPoller(Poller *poller)
@@ -194,4 +176,14 @@ namespace quark
         };
         poller_->RunInPoller(func);
     }
+
+    void Channel::HandleRead() 
+    { 
+        if (nullptr != read_handle_) 
+        {
+            read_handle_();
+        }
+    }
+    void Channel::HandleWrite() { }
+    void Channel::HandleError() { }
 } // namespace quark
